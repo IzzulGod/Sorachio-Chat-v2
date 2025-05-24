@@ -81,23 +81,29 @@ export const useChat = (selectedChatId: string | null) => {
         });
       }
 
+      // Prepare the API payload
+      const apiPayload: any = {
+        model: 'meta-llama/llama-4-maverick:free',
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 2000,
+      };
+
       // Add image to the latest user message if provided
       if (imageData) {
-        messages[messages.length - 1] = {
-          ...messages[messages.length - 1],
-          content: [
-            {
-              type: 'text',
-              text: content
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageData
-              }
+        const lastMessage = apiPayload.messages[apiPayload.messages.length - 1];
+        lastMessage.content = [
+          {
+            type: 'text',
+            text: content
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: imageData
             }
-          ]
-        };
+          }
+        ];
       }
 
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -106,12 +112,7 @@ export const useChat = (selectedChatId: string | null) => {
           'Authorization': 'Bearer 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',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-4-maverick:free',
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 2000,
-        }),
+        body: JSON.stringify(apiPayload),
       });
 
       if (!response.ok) {

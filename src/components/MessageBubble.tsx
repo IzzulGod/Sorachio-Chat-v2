@@ -1,5 +1,6 @@
 
 import { Message } from '@/types/chat';
+import { User } from 'lucide-react';
 
 interface MessageBubbleProps {
   message: Message;
@@ -35,7 +36,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       
       {isUser && (
         <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-white text-xs font-semibold">U</span>
+          <User className="w-4 h-4 text-white" />
         </div>
       )}
     </div>

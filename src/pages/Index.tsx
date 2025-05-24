@@ -104,7 +104,7 @@ const Index = () => {
         onDeleteChat={handleDeleteChat}
       />
       
-      {/* Sidebar overlay for mobile */}
+      {/* Sidebar overlay for mobile - transparent for easy closing */}
       {sidebarOpen && (
         <div 
           className="sidebar-overlay md:hidden"

@@ -33,7 +33,8 @@ export const WelcomeScreen = ({ onToggleSidebar }: WelcomeScreenProps) => {
             className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full"
           />
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-            Halo! Aku Sorachio 👋 ada yang bisa kubantu?
+            Halo! Aku Sorachio 👋
+            ada yang bisa kubantu?
           </h2>
         </div>
       </div>

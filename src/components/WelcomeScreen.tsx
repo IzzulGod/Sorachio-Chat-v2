@@ -25,22 +25,16 @@ export const WelcomeScreen = ({ onToggleSidebar }: WelcomeScreenProps) => {
         <div className="w-8"></div>
       </div>
       
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-        <div className="mb-8">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+        <div className="text-center max-w-sm">
           <img 
             src="/lovable-uploads/63083a92-c115-4af0-86c6-164b93752c8c.png" 
             alt="Sorachio Logo" 
-            className="w-24 h-24 mx-auto mb-6 rounded-full"
+            className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full"
           />
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Halo! Aku Sorachio 👋
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+            Halo! Aku Sorachio 👋 ada yang bisa kubantu?
           </h2>
-          <p className="text-lg text-gray-600 mb-2">
-            AI teman ngobrolmu yang siap bantuin apa aja!
-          </p>
-          <p className="text-base text-gray-500">
-            Mau ngobrol tentang apa hari ini?
-          </p>
         </div>
       </div>
     </div>

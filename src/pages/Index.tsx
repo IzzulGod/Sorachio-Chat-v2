@@ -49,7 +49,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white text-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-white text-gray-900 overflow-hidden mobile-fix">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -60,8 +60,8 @@ const Index = () => {
         onDeleteChat={handleDeleteChat}
       />
       
-      <div className="flex-1 flex flex-col relative">
-        <div className="flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col relative chat-container">
+        <div className="flex-1 overflow-hidden min-h-0">
           {!currentChat || currentChat.messages.length === 0 ? (
             <WelcomeScreen onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
           ) : (
@@ -74,10 +74,12 @@ const Index = () => {
           <div ref={messagesEndRef} />
         </div>
         
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-        />
+        <div className="input-area">
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
     </div>
   );

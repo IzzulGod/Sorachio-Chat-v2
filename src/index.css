@@ -103,15 +103,38 @@
     }
   }
 
-  /* Better mobile keyboard handling */
+  /* Better mobile layout and keyboard handling */
   @media screen and (max-width: 768px) {
-    .chat-container {
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    #root {
       height: 100vh;
       height: 100dvh; /* Dynamic viewport height for better mobile support */
+      overflow: hidden;
+    }
+    
+    .chat-container {
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
     }
     
     .input-area {
       padding-bottom: env(safe-area-inset-bottom);
+      position: sticky;
+      bottom: 0;
+      background: white;
+      z-index: 10;
+    }
+
+    /* Fix for mobile browsers address bar */
+    .mobile-fix {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
     }
   }
 

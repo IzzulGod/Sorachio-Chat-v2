@@ -204,7 +204,7 @@
       min-width: 44px;
     }
 
-    /* Sidebar improvements - no overlay version */
+    /* Sidebar improvements - overlay behind sidebar */
     .sidebar-overlay {
       position: fixed;
       top: 0;
@@ -212,7 +212,7 @@
       right: 0;
       bottom: 0;
       background: transparent;
-      z-index: 50;
+      z-index: 40; /* Lower than sidebar */
       /* Better touch handling */
       touch-action: none;
     }
@@ -225,7 +225,7 @@
       width: 280px;
       max-width: 80vw;
       background: hsl(var(--background));
-      z-index: 51;
+      z-index: 50; /* Higher than overlay */
       /* Smooth slide animation */
       transform: translateX(-100%);
       transition: transform 0.3s ease-in-out;

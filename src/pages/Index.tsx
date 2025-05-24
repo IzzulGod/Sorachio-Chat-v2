@@ -1,5 +1,4 @@
-
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChatContainer } from '@/components/ChatContainer';
 import { Sidebar } from '@/components/Sidebar';
 import { WelcomeScreen } from '@/components/WelcomeScreen';
@@ -11,14 +10,51 @@ const Index = () => {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const { chats, currentChat, createNewChat, deleteChat, sendMessage, isLoading } = useChat(selectedChatId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [currentChat?.messages]);
+  }, [currentChat?.messages, scrollToBottom]);
+
+  // Handle viewport height changes (mobile keyboard)
+  useEffect(() => {
+    const handleResize = () => {
+      // Force a scroll to bottom when viewport changes (keyboard open/close)
+      setTimeout(scrollToBottom, 100);
+    };
+
+    const handleOrientationChange = () => {
+      // Handle orientation changes
+      setTimeout(() => {
+        scrollToBottom();
+      }, 300);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, [scrollToBottom]);
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
 
   const handleSendMessage = async (content: string, image?: File) => {
     if (!selectedChatId) {
@@ -48,11 +84,19 @@ const Index = () => {
     }
   };
 
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarOpen(prev => !prev);
+  }, []);
+
+  const handleCloseSidebar = useCallback(() => {
+    setSidebarOpen(false);
+  }, []);
+
   return (
-    <div className="flex h-screen bg-white text-gray-900 overflow-hidden mobile-fix">
+    <div className="flex h-screen bg-white text-gray-900 overflow-hidden full-height">
       <Sidebar
         isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        onClose={handleCloseSidebar}
         chats={chats}
         selectedChatId={selectedChatId}
         onNewChat={handleNewChat}
@@ -60,21 +104,33 @@ const Index = () => {
         onDeleteChat={handleDeleteChat}
       />
       
-      <div className="flex-1 flex flex-col relative chat-container">
-        <div className="flex-1 overflow-hidden min-h-0">
+      {/* Sidebar overlay for mobile */}
+      {sidebarOpen && (
+        <div 
+          className="sidebar-overlay md:hidden"
+          onClick={handleCloseSidebar}
+          aria-label="Close sidebar"
+        />
+      )}
+      
+      <div 
+        ref={chatContainerRef}
+        className="flex-1 flex flex-col relative chat-container w-full min-w-0"
+      >
+        <div className="flex-1 overflow-hidden min-h-0 messages-container">
           {!currentChat || currentChat.messages.length === 0 ? (
-            <WelcomeScreen onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <WelcomeScreen onToggleSidebar={handleToggleSidebar} />
           ) : (
             <ChatContainer
               messages={currentChat.messages}
               isLoading={isLoading}
-              onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              onToggleSidebar={handleToggleSidebar}
             />
           )}
           <div ref={messagesEndRef} />
         </div>
         
-        <div className="input-area">
+        <div className="input-area flex-shrink-0">
           <ChatInput
             onSendMessage={handleSendMessage}
             isLoading={isLoading}

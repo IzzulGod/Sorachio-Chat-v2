@@ -104,19 +104,19 @@ const Index = () => {
         onDeleteChat={handleDeleteChat}
       />
       
-      {/* Sidebar overlay for mobile - transparent for easy closing */}
-      {sidebarOpen && (
-        <div 
-          className="sidebar-overlay md:hidden"
-          onClick={handleCloseSidebar}
-          aria-label="Close sidebar"
-        />
-      )}
-      
       <div 
         ref={chatContainerRef}
         className="flex-1 flex flex-col relative chat-container w-full min-w-0"
       >
+        {/* Sidebar overlay for mobile - positioned to only cover main content */}
+        {sidebarOpen && (
+          <div 
+            className="sidebar-overlay md:hidden"
+            onClick={handleCloseSidebar}
+            aria-label="Close sidebar"
+          />
+        )}
+        
         <div className="flex-1 overflow-hidden min-h-0 messages-container">
           {!currentChat || currentChat.messages.length === 0 ? (
             <WelcomeScreen onToggleSidebar={handleToggleSidebar} />

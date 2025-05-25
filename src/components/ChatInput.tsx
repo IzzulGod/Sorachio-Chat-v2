@@ -76,7 +76,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="flex items-end space-x-2">
+      <form onSubmit={handleSubmit} className="flex items-center space-x-2">
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
@@ -92,7 +92,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             }}
           />
           
-          <div className="absolute right-2 bottom-2 flex items-center space-x-1">
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
             <input
               ref={fileInputRef}
               type="file"

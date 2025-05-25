@@ -76,7 +76,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="flex items-end space-x-3">
+      <form onSubmit={handleSubmit} className="flex items-end space-x-2">
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
@@ -135,9 +135,9 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         <Button
           type="submit"
           disabled={(!message.trim() && !selectedImage) || isLoading}
-          className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-6 py-3 min-h-[52px] min-w-[52px] flex items-center justify-center"
+          className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-4 py-2 h-12 w-12 flex items-center justify-center"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="22" y1="2" x2="11" y2="13"/>
             <polygon points="22,2 15,22 11,13 2,9 22,2"/>
           </svg>

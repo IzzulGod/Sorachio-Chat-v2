@@ -9,11 +9,17 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // Debug environment variables
+    console.log('🌍 All environment keys:', Object.keys(process.env));
+    console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
+    console.log('🌍 NETLIFY:', process.env.NETLIFY);
+    
     // Check API key first
     const apiKey = process.env.OPENROUTER_API_KEY;
     console.log('🔑 API Key exists:', !!apiKey);
     console.log('🔑 API Key length:', apiKey ? apiKey.length : 0);
     console.log('🔑 API Key prefix:', apiKey ? apiKey.substring(0, 8) + '...' : 'MISSING');
+    console.log('🔑 Raw API Key type:', typeof apiKey);
     
     if (!apiKey) {
       console.error('❌ OPENROUTER_API_KEY not found in environment variables');

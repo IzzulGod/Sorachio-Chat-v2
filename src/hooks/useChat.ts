@@ -106,10 +106,10 @@ export const useChat = (selectedChatId: string | null) => {
         ];
       }
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      // Use Netlify function instead of direct API call
+      const response = await fetch('/.netlify/functions/chat', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer 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',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(apiPayload),

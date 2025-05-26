@@ -21,8 +21,10 @@ exports.handler = async (event, context) => {
     console.log('🔑 API Key prefix:', apiKey ? apiKey.substring(0, 8) + '...' : 'MISSING');
     console.log('🔑 Raw API Key type:', typeof apiKey);
     
-    if (!apiKey) {
-      console.error('❌ OPENROUTER_API_KEY not found in environment variables');
+    // More thorough API key validation
+    if (!apiKey || apiKey.trim() === '' || apiKey === 'undefined') {
+      console.error('❌ OPENROUTER_API_KEY not found or invalid in environment variables');
+      console.error('❌ Available env vars:', Object.keys(process.env).filter(key => key.includes('OPENROUTER')));
       return {
         statusCode: 500,
         headers: {
@@ -32,7 +34,12 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ 
           error: 'Server Configuration Error', 
           details: 'API key not configured. Please set OPENROUTER_API_KEY environment variable.',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          debug: {
+            apiKeyExists: !!apiKey,
+            apiKeyType: typeof apiKey,
+            envKeys: Object.keys(process.env).filter(key => key.includes('OPENROUTER'))
+          }
         }),
       };
     }
@@ -53,11 +60,12 @@ exports.handler = async (event, context) => {
     console.log('📤 Making request to OpenRouter...');
     const startTime = Date.now();
     
+    // FIXED: Proper template literal syntax
     const requestHeaders = {
-      'Authorization': `Bearer ${apiKey}`, // FIXED: Added backticks for template literal
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://sorachio.netlify.app', // Add referer for OpenRouter
-      'X-Title': 'Sorachio Chat App', // Add title for OpenRouter
+      'HTTP-Referer': 'https://sorachio.netlify.app',
+      'X-Title': 'Sorachio Chat App',
     };
     
     console.log('📤 Request headers (without auth):', { 
@@ -65,6 +73,10 @@ exports.handler = async (event, context) => {
       'HTTP-Referer': requestHeaders['HTTP-Referer'],
       'X-Title': requestHeaders['X-Title']
     });
+    
+    // Log the actual authorization header format (without exposing the key)
+    console.log('🔑 Auth header format check:', requestHeaders['Authorization'].startsWith('Bearer '));
+    console.log('🔑 Auth header length:', requestHeaders['Authorization'].length);
     
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',

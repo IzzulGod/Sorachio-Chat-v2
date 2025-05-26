@@ -196,7 +196,7 @@ export const useChat = (selectedChatId: string | null) => {
           throw new Error('Server sedang bermasalah. Coba lagi dalam beberapa saat.');
         }
         
-        throw new Error(errorData.details || Error ${response.status}: ${errorText});
+        throw new Error(errorData.details || `Error ${response.status}: ${errorText}`); // FIXED: Added backticks for template literal
       }
 
       const data = await response.json();
@@ -264,5 +264,5 @@ export const useChat = (selectedChatId: string | null) => {
     deleteChat,
     sendMessage,
     isLoading,
-  };
+  };
 };

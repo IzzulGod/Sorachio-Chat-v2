@@ -48,7 +48,7 @@ exports.handler = async (event, context) => {
     const startTime = Date.now();
     
     const requestHeaders = {
-      'Authorization': Bearer ${apiKey},
+      'Authorization': `Bearer ${apiKey}`, // FIXED: Added backticks for template literal
       'Content-Type': 'application/json',
       'HTTP-Referer': 'https://sorachio.netlify.app', // Add referer for OpenRouter
       'X-Title': 'Sorachio Chat App', // Add title for OpenRouter
@@ -148,6 +148,6 @@ exports.handler = async (event, context) => {
         errorType: error.name,
         originalMessage: error.message
       }),
-    };
-  }
+    };
+  }
 };

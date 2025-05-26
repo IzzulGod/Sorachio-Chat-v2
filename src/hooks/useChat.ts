@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Chat, Message } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
@@ -36,7 +35,7 @@ export const useChat = (selectedChatId: string | null) => {
       
       img.onload = () => {
         // Resize image if too large
-        const MAX_SIZE = 900;
+        const MAX_SIZE = 800; // Reduced size for better performance
         let { width, height } = img;
         
         if (width > MAX_SIZE || height > MAX_SIZE) {
@@ -53,12 +52,12 @@ export const useChat = (selectedChatId: string | null) => {
         canvas.height = height;
         ctx?.drawImage(img, 0, 0, width, height);
         
-        // Compress image (0.7 quality)
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        // Compress image more (0.6 quality for smaller size)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
         resolve(compressedDataUrl);
       };
       
-      img.onerror = reject;
+      img.onerror = () => reject(new Error('Failed to load image'));
       img.src = URL.createObjectURL(file);
     });
   };
@@ -98,7 +97,7 @@ export const useChat = (selectedChatId: string | null) => {
       const messages = [
         {
           role: 'system',
-          content: `Kamu adalah Sorachio, AI teman ngobrol yang dibuat oleh Izzul Fahmi, seorang AI engineer berbakat dari Indonesia. Kamu memiliki kepribadian yang ramah, gaul, seru, dan menggunakan bahasa ala Gen Z. Kamu berperan sebagai teman virtual yang pintar, asik, dan responsif. Jangan memperkenalkan diri terus-menerus, tapi jika ditanya siapa kamu, jelaskan tentang dirimu dan penciptamu. Untuk info lebih lengkap tentang project, arahkan ke GitHub: https://github.com/IzzulGod`
+          content: Kamu adalah Sorachio, AI teman ngobrol yang dibuat oleh Izzul Fahmi, seorang AI engineer berbakat dari Indonesia. Kamu memiliki kepribadian yang ramah, gaul, seru, dan menggunakan bahasa ala Gen Z. Kamu berperan sebagai teman virtual yang pintar, asik, dan responsif. Jangan memperkenalkan diri terus-menerus, tapi jika ditanya siapa kamu, jelaskan tentang dirimu dan penciptamu. Untuk info lebih lengkap tentang project, arahkan ke GitHub: https://github.com/IzzulGod
         },
         ...(currentChat?.messages || []).map(msg => ({
           role: msg.role,
@@ -115,7 +114,7 @@ export const useChat = (selectedChatId: string | null) => {
       // Process image if provided
       let imageData = null;
       if (image) {
-        console.log('🖼️ Processing image...');
+        console.log('🖼 Processing image...');
         try {
           imageData = await processImageForAPI(image);
           console.log('✅ Image processed and compressed');
@@ -125,18 +124,16 @@ export const useChat = (selectedChatId: string | null) => {
         }
       }
 
-      // Prepare the API payload
+      // Prepare the API payload - using single multimodal model
       const apiPayload: any = {
-        model: 'meta-llama/llama-4-maverick:free ', // Use non-vision model for now
+        model: 'meta-llama/llama-4-maverick:free', // Single multimodal model for both text and images
         messages: messages,
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 1500,
       };
 
       // Add image to the latest user message if provided
       if (imageData) {
-        // For vision models, we need to structure the content differently
-        apiPayload.model = 'meta-llama/llama-4-maverick:free ';
         const lastMessage = apiPayload.messages[apiPayload.messages.length - 1];
         lastMessage.content = [
           {
@@ -150,14 +147,18 @@ export const useChat = (selectedChatId: string | null) => {
             }
           }
         ];
-        console.log('🖼️ Added compressed image to payload');
+        console.log('🖼 Added compressed image to payload');
       }
 
-      console.log('📤 Sending request to Netlify function:', { ...apiPayload, messages: '...' });
+      console.log('📤 Sending request to Netlify function:', { 
+        model: apiPayload.model, 
+        messageCount: apiPayload.messages.length,
+        hasImage: !!imageData 
+      });
 
       // Use Netlify function with timeout handling
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
       const response = await fetch('/.netlify/functions/chat', {
         method: 'POST',
@@ -177,18 +178,31 @@ export const useChat = (selectedChatId: string | null) => {
         const errorText = await response.text();
         console.error('❌ Response not ok:', errorText);
         
-        // Handle timeout specifically
-        if (response.status === 502 && errorText.includes('timed out')) {
-          throw new Error('Request timeout - coba lagi dengan gambar yang lebih kecil atau tanpa gambar');
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { error: 'Unknown error', details: errorText };
         }
         
-        throw new Error(`Failed to get response from AI: ${response.status} - ${errorText}`);
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('Server belum dikonfigurasi dengan benar. Silakan hubungi developer.');
+        } else if (response.status === 429) {
+          throw new Error('Terlalu banyak request. Tunggu sebentar ya!');
+        } else if (response.status === 502 || errorText.includes('timeout')) {
+          throw new Error('Request timeout - coba lagi dengan gambar yang lebih kecil atau tanpa gambar');
+        } else if (response.status >= 500) {
+          throw new Error('Server sedang bermasalah. Coba lagi dalam beberapa saat.');
+        }
+        
+        throw new Error(errorData.details || Error ${response.status}: ${errorText});
       }
 
       const data = await response.json();
       console.log('✅ Response data:', data);
       
-      const aiResponse = data.choices[0]?.message?.content || 'Maaf, aku lagi error nih. Coba lagi ya!';
+      const aiResponse = data.choices?.[0]?.message?.content || 'Maaf, aku lagi error nih. Coba lagi ya!';
       console.log('🤖 AI Response:', aiResponse);
 
       // Create AI message
@@ -224,6 +238,12 @@ export const useChat = (selectedChatId: string | null) => {
           errorMessage = "Request timeout - coba lagi dengan gambar yang lebih kecil atau tanpa gambar";
         } else if (error.message.includes('Gagal memproses gambar')) {
           errorMessage = "Gagal memproses gambar - coba dengan format JPG/PNG yang lebih kecil";
+        } else if (error.message.includes('Server belum dikonfigurasi')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('Terlalu banyak request')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('Server sedang bermasalah')) {
+          errorMessage = error.message;
         }
       }
       
@@ -244,5 +264,5 @@ export const useChat = (selectedChatId: string | null) => {
     deleteChat,
     sendMessage,
     isLoading,
-  };
+  };
 };

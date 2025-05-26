@@ -1,5 +1,3 @@
----
-
 # SorachioChat v2
 
 **SorachioChat v2** is a sleek, AI-powered chatbot web application with **multimodal capabilities** — allowing users to chat using text, voice, and even images. The entire project was generated in minutes using [Lovable.dev](https://lovable.dev), with backend AI powered by OpenRouter API, and deployed securely via Netlify.

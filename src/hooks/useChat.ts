@@ -27,11 +27,47 @@ export const useChat = (selectedChatId: string | null) => {
     setChats(prev => prev.filter(chat => chat.id !== chatId));
   }, []);
 
+  // Helper function to resize and compress image
+  const processImageForAPI = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Resize image if too large
+        const MAX_SIZE = 800;
+        let { width, height } = img;
+        
+        if (width > MAX_SIZE || height > MAX_SIZE) {
+          if (width > height) {
+            height = (height * MAX_SIZE) / width;
+            width = MAX_SIZE;
+          } else {
+            width = (width * MAX_SIZE) / height;
+            height = MAX_SIZE;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Compress image (0.7 quality)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(compressedDataUrl);
+      };
+      
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const sendMessage = useCallback(async (content: string, image?: File, chatId?: string) => {
     const targetChatId = chatId || selectedChatId;
     if (!targetChatId) return;
 
-    console.log('🚀 Starting sendMessage with:', { content, targetChatId });
+    console.log('🚀 Starting sendMessage with:', { content, targetChatId, hasImage: !!image });
     setIsLoading(true);
     
     try {
@@ -76,21 +112,22 @@ export const useChat = (selectedChatId: string | null) => {
 
       console.log('📝 Prepared messages:', messages);
 
-      // Convert image to base64 if provided
+      // Process image if provided
       let imageData = null;
       if (image) {
         console.log('🖼️ Processing image...');
-        const reader = new FileReader();
-        imageData = await new Promise((resolve) => {
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(image);
-        });
-        console.log('✅ Image processed');
+        try {
+          imageData = await processImageForAPI(image);
+          console.log('✅ Image processed and compressed');
+        } catch (error) {
+          console.error('❌ Image processing failed:', error);
+          throw new Error('Gagal memproses gambar');
+        }
       }
 
       // Prepare the API payload
       const apiPayload: any = {
-        model: 'meta-llama/llama-4-maverick:free',
+        model: 'meta-llama/llama-3.1-8b-instruct:free', // Use non-vision model for now
         messages: messages,
         temperature: 0.7,
         max_tokens: 2000,
@@ -98,6 +135,8 @@ export const useChat = (selectedChatId: string | null) => {
 
       // Add image to the latest user message if provided
       if (imageData) {
+        // For vision models, we need to structure the content differently
+        apiPayload.model = 'meta-llama/llama-3.2-11b-vision-instruct:free';
         const lastMessage = apiPayload.messages[apiPayload.messages.length - 1];
         lastMessage.content = [
           {
@@ -111,19 +150,25 @@ export const useChat = (selectedChatId: string | null) => {
             }
           }
         ];
-        console.log('🖼️ Added image to payload');
+        console.log('🖼️ Added compressed image to payload');
       }
 
-      console.log('📤 Sending request to Netlify function:', apiPayload);
+      console.log('📤 Sending request to Netlify function:', { ...apiPayload, messages: '...' });
 
-      // Use Netlify function instead of direct API call
+      // Use Netlify function with timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+
       const response = await fetch('/.netlify/functions/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(apiPayload),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       console.log('📥 Response status:', response.status);
       console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
@@ -131,6 +176,12 @@ export const useChat = (selectedChatId: string | null) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Response not ok:', errorText);
+        
+        // Handle timeout specifically
+        if (response.status === 502 && errorText.includes('timed out')) {
+          throw new Error('Request timeout - coba lagi dengan gambar yang lebih kecil atau tanpa gambar');
+        }
+        
         throw new Error(`Failed to get response from AI: ${response.status} - ${errorText}`);
       }
 
@@ -163,9 +214,22 @@ export const useChat = (selectedChatId: string | null) => {
 
     } catch (error) {
       console.error('❌ Error sending message:', error);
+      
+      let errorMessage = "Gagal mengirim pesan. Coba lagi ya!";
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "Request timeout - coba lagi dengan gambar yang lebih kecil atau tanpa gambar";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Request timeout - coba lagi dengan gambar yang lebih kecil atau tanpa gambar";
+        } else if (error.message.includes('Gagal memproses gambar')) {
+          errorMessage = "Gagal memproses gambar - coba dengan format JPG/PNG yang lebih kecil";
+        }
+      }
+      
       toast({
         title: "Error",
-        description: "Gagal mengirim pesan. Coba lagi ya!",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

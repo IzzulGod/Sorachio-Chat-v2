@@ -31,6 +31,7 @@ export const useChat = (selectedChatId: string | null) => {
     const targetChatId = chatId || selectedChatId;
     if (!targetChatId) return;
 
+    console.log('🚀 Starting sendMessage with:', { content, targetChatId });
     setIsLoading(true);
     
     try {
@@ -42,6 +43,8 @@ export const useChat = (selectedChatId: string | null) => {
         image: image ? URL.createObjectURL(image) : undefined,
         timestamp: new Date(),
       };
+
+      console.log('✅ Created user message:', userMessage);
 
       // Add user message to chat
       setChats(prev => prev.map(chat => 
@@ -71,14 +74,18 @@ export const useChat = (selectedChatId: string | null) => {
         }
       ];
 
+      console.log('📝 Prepared messages:', messages);
+
       // Convert image to base64 if provided
       let imageData = null;
       if (image) {
+        console.log('🖼️ Processing image...');
         const reader = new FileReader();
         imageData = await new Promise((resolve) => {
           reader.onload = () => resolve(reader.result);
           reader.readAsDataURL(image);
         });
+        console.log('✅ Image processed');
       }
 
       // Prepare the API payload
@@ -104,7 +111,10 @@ export const useChat = (selectedChatId: string | null) => {
             }
           }
         ];
+        console.log('🖼️ Added image to payload');
       }
+
+      console.log('📤 Sending request to Netlify function:', apiPayload);
 
       // Use Netlify function instead of direct API call
       const response = await fetch('/.netlify/functions/chat', {
@@ -115,12 +125,20 @@ export const useChat = (selectedChatId: string | null) => {
         body: JSON.stringify(apiPayload),
       });
 
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error('Failed to get response from AI');
+        const errorText = await response.text();
+        console.error('❌ Response not ok:', errorText);
+        throw new Error(`Failed to get response from AI: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('✅ Response data:', data);
+      
       const aiResponse = data.choices[0]?.message?.content || 'Maaf, aku lagi error nih. Coba lagi ya!';
+      console.log('🤖 AI Response:', aiResponse);
 
       // Create AI message
       const aiMessage: Message = {
@@ -141,8 +159,10 @@ export const useChat = (selectedChatId: string | null) => {
           : chat
       ));
 
+      console.log('✅ Message sent successfully');
+
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
       toast({
         title: "Error",
         description: "Gagal mengirim pesan. Coba lagi ya!",

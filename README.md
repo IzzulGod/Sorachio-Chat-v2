@@ -10,29 +10,6 @@ A modern chat application built with cutting-edge web technologies, featuring a 
 - **UI Components**: shadcn/ui for consistent design system
 - **Deployment**: Netlify with serverless functions
 
-## 📁 Project Structure
-
-```
-SorachioChat-v2/
-├── netlify/functions/      # Serverless functions for backend logic
-├── public/                 # Static assets (images, icons, etc.)
-├── src/                    # Main application source code
-├── .gitignore             # Git ignore configuration
-├── README.md              # Project documentation
-├── bun.lockb              # Bun package manager lock file
-├── components.json        # shadcn/ui component configuration
-├── eslint.config.js       # ESLint configuration for code quality
-├── index.html             # Main HTML entry point
-├── package-lock.json      # npm lock file
-├── package.json           # Project dependencies and scripts
-├── postcss.config.js      # PostCSS configuration
-├── tailwind.config.ts     # Tailwind CSS configuration
-├── tsconfig.app.json      # TypeScript config for application
-├── tsconfig.json          # Main TypeScript configuration
-├── tsconfig.node.json     # TypeScript config for Node.js environment
-└── vite.config.ts         # Vite bundler configuration
-```
-
 ## 🛠️ Getting Started
 
 ### Prerequisites

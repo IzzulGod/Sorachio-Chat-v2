@@ -36,7 +36,7 @@ export const useChat = (selectedChatId: string | null) => {
       
       img.onload = () => {
         // Resize image if too large
-        const MAX_SIZE = 800;
+        const MAX_SIZE = 900;
         let { width, height } = img;
         
         if (width > MAX_SIZE || height > MAX_SIZE) {
@@ -127,7 +127,7 @@ export const useChat = (selectedChatId: string | null) => {
 
       // Prepare the API payload
       const apiPayload: any = {
-        model: 'meta-llama/llama-3.1-8b-instruct:free', // Use non-vision model for now
+        model: 'meta-llama/llama-4-maverick:free ', // Use non-vision model for now
         messages: messages,
         temperature: 0.7,
         max_tokens: 2000,
@@ -136,7 +136,7 @@ export const useChat = (selectedChatId: string | null) => {
       // Add image to the latest user message if provided
       if (imageData) {
         // For vision models, we need to structure the content differently
-        apiPayload.model = 'meta-llama/llama-3.2-11b-vision-instruct:free';
+        apiPayload.model = 'meta-llama/llama-4-maverick:free ';
         const lastMessage = apiPayload.messages[apiPayload.messages.length - 1];
         lastMessage.content = [
           {

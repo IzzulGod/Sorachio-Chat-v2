@@ -172,7 +172,7 @@ Project ini menggunakan MIT License.
 - UI components oleh [shadcn/ui](https://ui.shadcn.com)
 - Styling dengan [Tailwind CSS](https://tailwindcss.com)
 - AI backend oleh [OpenRouter API](https://openrouter.ai)
-- Created by **Izzul Fahmi** - AI Engineer Indonesia
+- Created by **Izzul Fahmi** - AI Engineer 
 
 ## 📞 Contact
 

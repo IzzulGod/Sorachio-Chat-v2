@@ -1,42 +1,66 @@
+
 # SorachioChat v2
 
-**SorachioChat v2** is a sleek, AI-powered chatbot web application with **multimodal capabilities** — allowing users to chat using text, voice, and even images. The entire project was generated in minutes using [Lovable.dev](https://lovable.dev), with backend AI powered by OpenRouter API, and deployed securely via Netlify.
+**SorachioChat v2** adalah aplikasi chatbot AI yang canggih dengan kemampuan **multimodal** — memungkinkan pengguna untuk berinteraksi menggunakan teks, suara, dan gambar. Seluruh project ini dibangun dengan bantuan AI menggunakan [Lovable.dev](https://lovable.dev), dengan backend AI yang didukung oleh OpenRouter API, dan di-deploy secara aman melalui Netlify.
 
 ## 🔗 Live Demo
 
-Try it now: [sorachio.netlify.app](https://sorachio.netlify.app)
+Coba sekarang: [sorachio.netlify.app](https://sorachio.netlify.app)
 
-## ✨ Features
+## ✨ Fitur Utama
 
-- **Multimodal Chat**: Send text and image inputs to the AI (supports GPT-4 Vision, Claude 3, and more)
-- **Voice Input**: Record voice, convert it to text, and send it as a message
-- **Sidebar Chat Management**: View chat history, create new chats, and delete conversations
-- **Responsive Design**: Clean UI built with Tailwind CSS and shadcn/ui components
-- **Serverless & Secure**: API requests are routed through Netlify Functions to hide API keys
-- **Rapid Prototyping**: The full app was generated with the help of AI in just minutes
+### 🤖 AI Assistant - Sorachio
+- **Kepribadian Gen Z**: AI dengan personality ramah, gaul, dan seru
+- **Bahasa Indonesia**: Mendukung percakapan dalam bahasa Indonesia
+- **Multimodal Chat**: Kirim teks dan gambar ke AI (mendukung GPT-4 Vision, Claude 3, dan model lainnya)
+- **Voice Input**: Rekam suara, konversi ke teks, dan kirim sebagai pesan
+
+### 💬 Chat Management
+- **Sidebar Chat History**: Lihat riwayat chat, buat chat baru, dan hapus percakapan
+- **Multiple Conversations**: Kelola beberapa percakapan sekaligus
+- **Auto-generated Titles**: Judul chat otomatis berdasarkan pesan pertama
+- **Persistent Storage**: Chat tersimpan dalam browser storage
+
+### 🎨 User Interface
+- **Responsive Design**: UI yang bersih dan responsif untuk desktop dan mobile
+- **Mobile-Optimized**: Sidebar yang disesuaikan untuk tampilan mobile
+- **Smooth Animations**: Transisi yang halus dan loading indicators
+- **Image Preview**: Preview gambar yang dikirim dalam chat
+
+### ⚡ Performance & Security
+- **Serverless Backend**: Request API melalui Netlify Functions untuk keamanan
+- **Image Compression**: Kompresi gambar otomatis untuk performa optimal
+- **Error Handling**: Penanganan error yang comprehensive dengan pesan yang informatif
+- **Timeout Management**: Manajemen timeout untuk request yang berat
 
 ## ⚙️ Tech Stack
 
-- **Frontend**: React 18 with TypeScript
+- **Frontend**: React 18 dengan TypeScript
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS
 - **UI Library**: shadcn/ui
+- **State Management**: React Hooks (useState, useCallback)
 - **Backend**: Netlify Functions
-- **AI Models**: Accessed via OpenRouter API (LLMs with multimodal support)
+- **AI Models**: OpenRouter API (mendukung berbagai model LLM multimodal)
+- **Speech Recognition**: Web Speech API
+- **Image Processing**: Canvas API untuk kompresi gambar
 
-## 🧠 How It Works
+## 🧠 Cara Kerja
 
-1. User sends input (text, image, or voice)
-2. The frontend formats and sends the request to a Netlify Function
-3. The serverless function securely forwards the request to OpenRouter API
-4. AI generates a response, which is returned and displayed in the chat UI
-5. Sidebar allows users to manage conversations
+1. **Input Processing**: User mengirim input (teks, gambar, atau suara)
+2. **Client-side Processing**: 
+   - Voice dikonversi ke teks menggunakan Web Speech API
+   - Gambar dikompres menggunakan Canvas API
+3. **Secure API Call**: Frontend mengirim request ke Netlify Function
+4. **AI Processing**: Serverless function meneruskan request ke OpenRouter API secara aman
+5. **Response Handling**: AI menghasilkan response yang ditampilkan di chat UI
+6. **Chat Management**: Sidebar memungkinkan pengelolaan multiple conversations
 
 ## 🛠️ Getting Started
 
 ### Prerequisites
 
-Ensure you have **Node.js** or **Bun** installed.
+Pastikan Anda memiliki **Node.js** atau **Bun** terinstall.
 
 ### Installation
 
@@ -45,48 +69,117 @@ git clone https://github.com/IzzulGod/SorachioChat-v2
 cd SorachioChat-v2
 
 # Install dependencies
-npm install     # or: bun install
+npm install     # atau: bun install
 
 # Start development server
-npm run dev     # or: bun dev
+npm run dev     # atau: bun dev
 ```
 
-Then open your browser at http://localhost:5173
+Kemudian buka browser di http://localhost:5173
+
+### Environment Setup
+
+Untuk menjalankan backend, Anda perlu setup environment variables di Netlify:
+
+```env
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+```
 
 ### Build for Production
 
 ```bash
 npm run build
-# or
+# atau
 bun run build
 ```
 
-## 📦 Scripts
+## 📦 Available Scripts
 
 - `dev` – Start local development server
 - `build` – Build for production
 - `preview` – Preview production build locally
-- `lint` – Run ESLint for code quality
+- `lint` – Run ESLint untuk quality code
+
+## 🎯 Fitur Khusus
+
+### Image Processing
+- Automatic image resizing (max 800px)
+- JPEG compression (60% quality)
+- Support untuk format JPG dan PNG
+
+### Voice Recognition
+- Real-time speech-to-text
+- Support untuk berbagai bahasa
+- Visual feedback saat recording
+
+### Error Handling
+- Timeout handling untuk request berat
+- Specific error messages untuk berbagai skenario
+- Toast notifications untuk user feedback
+
+### Mobile Experience
+- Touch-optimized interface
+- Adaptive sidebar width (50% screen pada mobile)
+- Keyboard-aware scrolling
+- Orientation change handling
 
 ## ☁️ Deployment
 
-This project is fully configured for deployment via Netlify, with automatic builds from GitHub and backend logic running through serverless functions.
+Project ini sudah dikonfigurasi lengkap untuk deployment via Netlify, dengan automatic builds dari GitHub dan backend logic yang berjalan melalui serverless functions.
+
+### Netlify Functions
+- `/netlify/functions/chat.js` - Main API endpoint untuk chat
+- Environment variables management
+- CORS handling
+
+## 🔧 Customization
+
+### Mengganti Model AI
+Edit file `src/hooks/useChat.ts` dan ubah model di dalam `apiPayload`:
+
+```typescript
+const apiPayload = {
+  model: 'meta-llama/llama-4-maverick:free', // Ganti dengan model pilihan
+  // ...
+};
+```
+
+### Mengubah Personality AI
+Edit system prompt di `useChat.ts`:
+
+```typescript
+{
+  role: 'system',
+  content: 'Kamu adalah Sorachio, AI yang dibuat oleh...' // Customize personality di sini
+}
+```
 
 ## 🤝 Contributing
 
-1. Fork this repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Fork repository ini
+2. Buat feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push ke branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+Project ini menggunakan MIT License.
 
-##  Credits
+## 🙏 Credits
 
-- Built with [Lovable.dev](https://lovable.dev) – AI-generated coding assistant
-- UI components by [shadcn/ui](https://ui.shadcn.com)
-- Styled with [Tailwind CSS](https://tailwindcss.com)
-- Powered by [OpenRouter API](https://openrouter.ai)
+- Dibangun dengan [Lovable.dev](https://lovable.dev) – AI-powered coding assistant
+- UI components oleh [shadcn/ui](https://ui.shadcn.com)
+- Styling dengan [Tailwind CSS](https://tailwindcss.com)
+- AI backend oleh [OpenRouter API](https://openrouter.ai)
+- Created by **Izzul Fahmi** - AI Engineer Indonesia
+
+## 📞 Contact
+
+- GitHub: [@IzzulGod](https://github.com/IzzulGod)
+- Project Link: [https://github.com/IzzulGod/SorachioChat-v2](https://github.com/IzzulGod/SorachioChat-v2)
+- Live Demo: [sorachio.netlify.app](https://sorachio.netlify.app)
+
+---
+
+*"Built with ❤️ and AI assistance from Lovable.dev"*

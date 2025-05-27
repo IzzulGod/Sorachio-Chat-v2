@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChatContainer } from '@/components/ChatContainer';
 import { Sidebar } from '@/components/Sidebar';
@@ -85,12 +86,15 @@ const Index = () => {
   };
 
   const handleToggleSidebar = useCallback(() => {
+    console.log('Toggling sidebar. Current state:', sidebarOpen, 'New state:', !sidebarOpen);
     setSidebarOpen(prev => !prev);
-  }, []);
+  }, [sidebarOpen]);
 
   const handleCloseSidebar = useCallback(() => {
     setSidebarOpen(false);
   }, []);
+
+  console.log('Index render - sidebarOpen:', sidebarOpen);
 
   return (
     <div className="flex h-screen bg-white text-gray-900 overflow-hidden full-height">

@@ -125,6 +125,7 @@ const Index = () => {
               messages={currentChat.messages}
               isLoading={isLoading}
               onToggleSidebar={handleToggleSidebar}
+              sidebarOpen={sidebarOpen}
             />
           )}
           <div ref={messagesEndRef} />

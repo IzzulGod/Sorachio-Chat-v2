@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChatContainer } from '@/components/ChatContainer';
 import { Sidebar } from '@/components/Sidebar';
@@ -123,7 +122,7 @@ const Index = () => {
         
         <div className="flex-1 overflow-hidden min-h-0 messages-container">
           {!currentChat || currentChat.messages.length === 0 ? (
-            <WelcomeScreen onToggleSidebar={handleToggleSidebar} />
+            <WelcomeScreen onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
           ) : (
             <ChatContainer
               messages={currentChat.messages}

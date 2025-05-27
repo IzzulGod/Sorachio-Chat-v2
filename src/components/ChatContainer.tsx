@@ -1,25 +1,58 @@
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from '@/components/MessageBubble';
 import { Message } from '@/types/chat';
+import { useEffect, RefObject } from 'react';
 
 interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
   onToggleSidebar: () => void;
   sidebarOpen?: boolean;
+  messagesContainerRef?: RefObject<HTMLDivElement>;
 }
 
-export const ChatContainer = ({ messages, isLoading, onToggleSidebar, sidebarOpen = false }: ChatContainerProps) => {
+export const ChatContainer = ({ 
+  messages, 
+  isLoading, 
+  onToggleSidebar, 
+  sidebarOpen = false,
+  messagesContainerRef 
+}: ChatContainerProps) => {
   console.log('ChatContainer render - sidebarOpen:', sidebarOpen);
   
   const handleToggleClick = () => {
     console.log('Toggle button clicked! Current sidebarOpen:', sidebarOpen);
     onToggleSidebar();
   };
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    if (messagesContainerRef?.current) {
+      const container = messagesContainerRef.current;
+      // Scroll to bottom smoothly
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [messages, messagesContainerRef]);
+
+  // Auto-scroll when loading state changes
+  useEffect(() => {
+    if (messagesContainerRef?.current && !isLoading) {
+      const container = messagesContainerRef.current;
+      setTimeout(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  }, [isLoading, messagesContainerRef]);
   
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
         <Button
           variant="ghost"
           size="sm"
@@ -45,7 +78,7 @@ export const ChatContainer = ({ messages, isLoading, onToggleSidebar, sidebarOpe
         <div className="w-8"></div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ scrollBehavior: 'smooth' }}>
         {messages.map((message) => (
           <MessageBubble key={message.id} message={message} />
         ))}

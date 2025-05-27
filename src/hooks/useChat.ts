@@ -81,7 +81,7 @@ export const useChat = (selectedChatId: string | null) => {
 
       console.log('✅ Created user message:', userMessage);
 
-      // Add user message to chat
+      // Add user message to chat immediately
       setChats(prev => prev.map(chat => 
         chat.id === targetChatId 
           ? { 

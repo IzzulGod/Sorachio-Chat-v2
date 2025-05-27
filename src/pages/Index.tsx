@@ -11,14 +11,43 @@ const Index = () => {
   const { chats, currentChat, createNewChat, deleteChat, sendMessage, isLoading } = useChat(selectedChatId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      // Method 1: Scroll the messages container
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      
+      // Method 2: Also use scrollIntoView as backup
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: "smooth",
+          block: "end"
+        });
+      }, 50);
+    }
   }, []);
 
+  // Force scroll when messages change
   useEffect(() => {
-    scrollToBottom();
+    if (currentChat?.messages && currentChat.messages.length > 0) {
+      // Immediate scroll
+      scrollToBottom();
+      
+      // Also scroll after a brief delay to handle any rendering delays
+      const timeoutId = setTimeout(scrollToBottom, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
   }, [currentChat?.messages, scrollToBottom]);
+
+  // Force scroll when loading state changes
+  useEffect(() => {
+    if (!isLoading) {
+      // When loading finishes, scroll to bottom
+      setTimeout(scrollToBottom, 200);
+    }
+  }, [isLoading, scrollToBottom]);
 
   // Handle viewport height changes (mobile keyboard)
   useEffect(() => {
@@ -60,9 +89,19 @@ const Index = () => {
     if (!selectedChatId) {
       const newChatId = createNewChat();
       setSelectedChatId(newChatId);
-      await sendMessage(content, image, newChatId);
+      // Force scroll after sending message
+      setTimeout(() => {
+        sendMessage(content, image, newChatId).then(() => {
+          // Double ensure scroll after message is sent
+          setTimeout(scrollToBottom, 300);
+        });
+      }, 100);
     } else {
-      await sendMessage(content, image, selectedChatId);
+      // Force scroll after sending message
+      sendMessage(content, image, selectedChatId).then(() => {
+        // Double ensure scroll after message is sent
+        setTimeout(scrollToBottom, 300);
+      });
     }
   };
 
@@ -75,6 +114,8 @@ const Index = () => {
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
     setSidebarOpen(false);
+    // Scroll to bottom when switching chats
+    setTimeout(scrollToBottom, 100);
   };
 
   const handleDeleteChat = (chatId: string) => {
@@ -120,7 +161,10 @@ const Index = () => {
           />
         )}
         
-        <div className="flex-1 overflow-hidden min-h-0 messages-container">
+        <div 
+          ref={messagesContainerRef}
+          className="flex-1 overflow-hidden min-h-0 messages-container"
+        >
           {!currentChat || currentChat.messages.length === 0 ? (
             <WelcomeScreen onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
           ) : (
@@ -129,9 +173,10 @@ const Index = () => {
               isLoading={isLoading}
               onToggleSidebar={handleToggleSidebar}
               sidebarOpen={sidebarOpen}
+              messagesContainerRef={messagesContainerRef}
             />
           )}
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-1" />
         </div>
         
         <div className="input-area flex-shrink-0">

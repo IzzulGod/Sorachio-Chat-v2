@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Chat } from '@/types/chat';
 
@@ -21,14 +20,17 @@ export const Sidebar = ({
   onSelectChat, 
   onDeleteChat 
 }: SidebarProps) => {
-  if (!isOpen) return null;
-
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={onClose} />
-      <div className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:relative md:translate-x-0 md:w-80`}>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={onClose} />
+      )}
+      
+      {/* Sidebar - Always render, but control visibility with transform */}
+      <div className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 z-50 transition-transform duration-300 ease-in-out md:relative md:z-auto md:w-80 ${
+        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`}>
         <div className="flex flex-col h-full">
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">

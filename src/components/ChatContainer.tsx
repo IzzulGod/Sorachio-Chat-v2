@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from '@/components/MessageBubble';
 import { Message } from '@/types/chat';
@@ -13,14 +12,20 @@ interface ChatContainerProps {
 export const ChatContainer = ({ messages, isLoading, onToggleSidebar, sidebarOpen = false }: ChatContainerProps) => {
   console.log('ChatContainer render - sidebarOpen:', sidebarOpen);
   
+  const handleToggleClick = () => {
+    console.log('Toggle button clicked! Current sidebarOpen:', sidebarOpen);
+    onToggleSidebar();
+  };
+  
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
         <Button
           variant="ghost"
           size="sm"
-          onClick={onToggleSidebar}
-          className="p-2 hover:bg-gray-100 rounded-md"
+          onClick={handleToggleClick}
+          className="p-2 hover:bg-gray-100 rounded-md z-50 relative"
+          style={{ zIndex: 9999 }}
         >
           {sidebarOpen ? (
             // Back/Close icon when sidebar is open

@@ -165,10 +165,4 @@ Edit the system prompt in `useChat.ts`:
 
 This project is licensed under the MIT License.
 
-## 📞 Contact
-
-- GitHub: [@IzzulGod](https://github.com/IzzulGod)
-- Project Link: [https://github.com/IzzulGod/SorachioChat-v2](https://github.com/IzzulGod/SorachioChat-v2)
-- Live Demo: [sorachio.netlify.app](https://sorachio.netlify.app)
-
 ---

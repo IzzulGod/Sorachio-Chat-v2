@@ -310,3 +310,241 @@
     height: 100vh;
   }
 }
+
+/* Math rendering styles */
+.katex {
+  font-size: 1.1em !important;
+}
+
+.katex-display {
+  margin: 16px 0 !important;
+  text-align: center !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.katex-display > .katex {
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Code block styles */
+.code-block {
+  background: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin: 12px 0 !important;
+  overflow-x: auto !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'Courier New', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  position: relative;
+}
+
+.code-block::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 12px;
+  color: #6c757d;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.code-block code {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: inherit !important;
+  color: inherit !important;
+}
+
+/* Inline code styles */
+.inline-code {
+  background: rgba(175, 184, 193, 0.2) !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'Courier New', monospace !important;
+  font-size: 0.9em !important;
+  color: #e91e63 !important;
+  font-weight: 500;
+}
+
+/* Dark theme support */
+.bg-gray-900 .inline-code {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ff6b9d !important;
+}
+
+.bg-gray-900 .code-block {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #e9ecef !important;
+}
+
+.bg-gray-900 .katex {
+  color: white !important;
+}
+
+/* Prism theme customization */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #495057;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #d63384;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #198754;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #fd7e14;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #0d6efd;
+}
+
+.token.function,
+.token.class-name {
+  color: #6f42c1;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #e83e8c;
+}
+
+/* Language-specific highlighting */
+.language-python .token.decorator {
+  color: #20c997;
+}
+
+.language-javascript .token.template-string {
+  color: #198754;
+}
+
+.language-css .token.property {
+  color: #0d6efd;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .katex {
+    font-size: 1em !important;
+  }
+  
+  .katex-display {
+    margin: 12px 0 !important;
+    padding: 0 8px;
+  }
+  
+  .code-block {
+    font-size: 13px !important;
+    padding: 12px !important;
+    margin: 8px 0 !important;
+  }
+  
+  .inline-code {
+    font-size: 0.85em !important;
+    padding: 2px 4px !important;
+  }
+}
+
+/* Copy button for code blocks (optional enhancement) */
+.code-block:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.copy-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Math equation numbering (optional) */
+.katex-display.numbered {
+  position: relative;
+}
+
+.katex-display.numbered::after {
+  content: counter(equation);
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  padding: 0 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Scrollable math expressions */
+.katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0;
+}
+
+.katex-display::-webkit-scrollbar {
+  height: 4px;
+}
+
+.katex-display::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 2px;
+}
+
+.katex-display::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 2px;
+}
+
+.katex-display::-webkit-scrollbar-thumb:hover {
+  background: #bdc1c6;
+  }

@@ -164,5 +164,3 @@ Edit the system prompt in `useChat.ts`:
 ## 📄 License
 
 This project is licensed under the MIT License.
-
----

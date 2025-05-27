@@ -52,7 +52,7 @@ export const WelcomeScreen = ({ onToggleSidebar, sidebarOpen = false }: WelcomeS
               Halo! Aku Sorachio 👋
             </h2>
             <p className="text-lg text-gray-600 font-medium">
-              Apa ada yang bisa kubantu?
+              Ada yang bisa kubantu?
             </p>
           </div>
         </div>

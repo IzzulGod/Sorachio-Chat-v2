@@ -16,9 +16,22 @@ const Index = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  // Force scroll immediately when messages change
   useEffect(() => {
-    scrollToBottom();
+    const timeoutId = setTimeout(() => {
+      scrollToBottom();
+    }, 100); // Small delay to ensure DOM has updated
+
+    return () => clearTimeout(timeoutId);
   }, [currentChat?.messages, scrollToBottom]);
+
+  // Additional scroll trigger for loading state changes
+  useEffect(() => {
+    if (!isLoading) {
+      // When loading finishes (AI response received), scroll to bottom
+      setTimeout(scrollToBottom, 200);
+    }
+  }, [isLoading, scrollToBottom]);
 
   // Handle viewport height changes (mobile keyboard)
   useEffect(() => {
@@ -57,6 +70,11 @@ const Index = () => {
   }, [sidebarOpen]);
 
   const handleSendMessage = async (content: string, image?: File) => {
+    console.log('🚀 Sending message, will scroll to bottom after...');
+    
+    // Scroll immediately when send button is clicked
+    setTimeout(scrollToBottom, 50);
+    
     if (!selectedChatId) {
       const newChatId = createNewChat();
       setSelectedChatId(newChatId);
@@ -64,6 +82,9 @@ const Index = () => {
     } else {
       await sendMessage(content, image, selectedChatId);
     }
+    
+    // Scroll again after message is sent
+    setTimeout(scrollToBottom, 100);
   };
 
   const handleNewChat = () => {

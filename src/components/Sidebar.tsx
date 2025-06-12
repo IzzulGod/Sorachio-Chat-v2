@@ -1,4 +1,5 @@
 
+
 import { Button } from '@/components/ui/button';
 import { Chat } from '@/types/chat';
 import { Download, FileText, FileJson } from 'lucide-react';
@@ -54,12 +55,12 @@ export const Sidebar = ({
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={onClose} />
       
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-64 md:w-80 bg-white border-r border-gray-200 z-50 md:relative">
+      <div className="fixed left-0 top-0 h-full w-64 md:w-80 bg-background border-r border-border z-50 md:relative">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Chat History</h2>
+              <h2 className="text-lg font-semibold text-foreground">Chat History</h2>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -71,7 +72,7 @@ export const Sidebar = ({
             </div>
             <Button
               onClick={onNewChat}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-lg"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
             >
               + New Chat
             </Button>
@@ -80,7 +81,7 @@ export const Sidebar = ({
           {/* Chat List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {chats.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-muted-foreground py-8">
                 <p className="text-sm">No chats yet</p>
                 <p className="text-xs mt-1">Start a new conversation!</p>
               </div>
@@ -90,8 +91,8 @@ export const Sidebar = ({
                   key={chat.id}
                   className={`group relative rounded-lg transition-colors ${
                     selectedChatId === chat.id 
-                      ? 'bg-gray-100' 
-                      : 'hover:bg-gray-50'
+                      ? 'bg-accent' 
+                      : 'hover:bg-accent/50'
                   }`}
                 >
                   <div
@@ -100,10 +101,10 @@ export const Sidebar = ({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0 pr-2">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {chat.title || 'New Chat'}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {chat.messages.length} messages
                         </p>
                       </div>
@@ -113,7 +114,7 @@ export const Sidebar = ({
                           variant="ghost"
                           size="sm"
                           onClick={(e) => toggleExportMenu(e, chat.id)}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-blue-100 hover:text-blue-600 text-gray-400 flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-600 dark:hover:text-blue-400 text-muted-foreground flex-shrink-0"
                           title="Export chat"
                         >
                           <Download size={16} />
@@ -126,7 +127,7 @@ export const Sidebar = ({
                             e.stopPropagation();
                             onDeleteChat(chat.id);
                           }}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 hover:text-red-600 text-gray-400 flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 hover:text-destructive text-muted-foreground flex-shrink-0"
                           title="Delete chat"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -144,12 +145,12 @@ export const Sidebar = ({
                   {/* Export menu */}
                   {expandedChatId === chat.id && (
                     <div className="px-3 pb-3">
-                      <div className="bg-gray-50 rounded-md p-2 space-y-1">
+                      <div className="bg-muted rounded-md p-2 space-y-1">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => handleExportJSON(e, chat)}
-                          className="w-full justify-start text-xs h-8 hover:bg-gray-100"
+                          className="w-full justify-start text-xs h-8 hover:bg-accent"
                         >
                           <FileJson size={14} className="mr-2" />
                           Export as JSON
@@ -158,7 +159,7 @@ export const Sidebar = ({
                           variant="ghost"
                           size="sm"
                           onClick={(e) => handleExportTXT(e, chat)}
-                          className="w-full justify-start text-xs h-8 hover:bg-gray-100"
+                          className="w-full justify-start text-xs h-8 hover:bg-accent"
                         >
                           <FileText size={14} className="mr-2" />
                           Export as TXT

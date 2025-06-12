@@ -1,6 +1,8 @@
 
+
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from '@/components/MessageBubble';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Message } from '@/types/chat';
 import { RefObject } from 'react';
 
@@ -27,13 +29,13 @@ export const ChatContainer = ({
   };
   
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+    <div className="flex flex-col h-full bg-background text-foreground">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleToggleClick}
-          className={`p-2 hover:bg-gray-100 rounded-md z-50 relative ${
+          className={`p-2 hover:bg-accent rounded-md z-50 relative ${
             sidebarOpen ? 'hidden md:block' : 'block'
           }`}
           style={{ zIndex: 9999 }}
@@ -52,8 +54,8 @@ export const ChatContainer = ({
             </svg>
           )}
         </Button>
-        <h1 className="text-lg font-semibold text-gray-900">Sorachio</h1>
-        <div className="w-8"></div>
+        <h1 className="text-lg font-semibold text-foreground">Sorachio</h1>
+        <ThemeToggle />
       </div>
       
       <div 
@@ -72,11 +74,11 @@ export const ChatContainer = ({
               alt="Sorachio" 
               className="w-8 h-8 rounded-full"
             />
-            <div className="bg-gray-100 rounded-lg p-3 max-w-xs">
+            <div className="bg-muted rounded-lg p-3 max-w-xs">
               <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
           </div>

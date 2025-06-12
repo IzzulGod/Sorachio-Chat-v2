@@ -1,4 +1,6 @@
+
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface WelcomeScreenProps {
   onToggleSidebar: () => void;
@@ -9,13 +11,13 @@ export const WelcomeScreen = ({ onToggleSidebar, sidebarOpen = false }: WelcomeS
   console.log('WelcomeScreen render - sidebarOpen:', sidebarOpen);
   
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+    <div className="flex flex-col h-full bg-background text-foreground">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggleSidebar}
-          className={`p-2 hover:bg-gray-100 rounded-md ${
+          className={`p-2 hover:bg-accent rounded-md ${
             sidebarOpen ? 'hidden md:block' : 'block'
           }`}
         >
@@ -33,8 +35,8 @@ export const WelcomeScreen = ({ onToggleSidebar, sidebarOpen = false }: WelcomeS
             </svg>
           )}
         </Button>
-        <h1 className="text-lg font-semibold text-gray-900">Sorachio</h1>
-        <div className="w-8"></div>
+        <h1 className="text-lg font-semibold text-foreground">Sorachio</h1>
+        <ThemeToggle />
       </div>
       
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
@@ -48,10 +50,10 @@ export const WelcomeScreen = ({ onToggleSidebar, sidebarOpen = false }: WelcomeS
           </div>
           
           <div className="space-y-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
               Halo! Aku Sorachio 👋
             </h2>
-            <p className="text-lg text-gray-600 font-medium">
+            <p className="text-lg text-muted-foreground font-medium">
               Ada yang bisa kubantu?
             </p>
           </div>

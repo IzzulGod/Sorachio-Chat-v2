@@ -1,5 +1,9 @@
+
 import { Button } from '@/components/ui/button';
 import { Chat } from '@/types/chat';
+import { Download, FileText, FileJson } from 'lucide-react';
+import { exportChatAsJSON, exportChatAsTXT } from '@/utils/chatExport';
+import { useState } from 'react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,12 +24,29 @@ export const Sidebar = ({
   onSelectChat, 
   onDeleteChat 
 }: SidebarProps) => {
+  const [expandedChatId, setExpandedChatId] = useState<string | null>(null);
+
   console.log('Sidebar render - isOpen:', isOpen);
 
   if (!isOpen) {
     console.log('Sidebar hidden because isOpen is false');
     return null;
   }
+
+  const handleExportJSON = (e: React.MouseEvent, chat: Chat) => {
+    e.stopPropagation();
+    exportChatAsJSON(chat);
+  };
+
+  const handleExportTXT = (e: React.MouseEvent, chat: Chat) => {
+    e.stopPropagation();
+    exportChatAsTXT(chat);
+  };
+
+  const toggleExportMenu = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    setExpandedChatId(expandedChatId === chatId ? null : chatId);
+  };
 
   return (
     <>
@@ -67,41 +88,84 @@ export const Sidebar = ({
               chats.map((chat) => (
                 <div
                   key={chat.id}
-                  className={`group relative p-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`group relative rounded-lg transition-colors ${
                     selectedChatId === chat.id 
                       ? 'bg-gray-100' 
                       : 'hover:bg-gray-50'
                   }`}
-                  onClick={() => onSelectChat(chat.id)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {chat.title || 'New Chat'}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {chat.messages.length} messages
-                      </p>
+                  <div
+                    className="p-3 cursor-pointer"
+                    onClick={() => onSelectChat(chat.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {chat.title || 'New Chat'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {chat.messages.length} messages
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        {/* Export button */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => toggleExportMenu(e, chat.id)}
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-blue-100 hover:text-blue-600 text-gray-400 flex-shrink-0"
+                          title="Export chat"
+                        >
+                          <Download size={16} />
+                        </Button>
+                        {/* Delete button */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteChat(chat.id);
+                          }}
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 hover:text-red-600 text-gray-400 flex-shrink-0"
+                          title="Delete chat"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c-1 0 2 1 2 2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                          </svg>
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteChat(chat.id);
-                      }}
-                      className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 hover:text-red-600 text-gray-400 hover:text-red-600 flex-shrink-0"
-                      title="Delete chat"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M3 6h18"/>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c-1 0 2 1 2 2v2"/>
-                        <line x1="10" y1="11" x2="10" y2="17"/>
-                        <line x1="14" y1="11" x2="14" y2="17"/>
-                      </svg>
-                    </Button>
                   </div>
+                  
+                  {/* Export menu */}
+                  {expandedChatId === chat.id && (
+                    <div className="px-3 pb-3">
+                      <div className="bg-gray-50 rounded-md p-2 space-y-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleExportJSON(e, chat)}
+                          className="w-full justify-start text-xs h-8 hover:bg-gray-100"
+                        >
+                          <FileJson size={14} className="mr-2" />
+                          Export as JSON
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleExportTXT(e, chat)}
+                          className="w-full justify-start text-xs h-8 hover:bg-gray-100"
+                        >
+                          <FileText size={14} className="mr-2" />
+                          Export as TXT
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}

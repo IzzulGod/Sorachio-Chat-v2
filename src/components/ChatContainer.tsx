@@ -1,15 +1,24 @@
+
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from '@/components/MessageBubble';
 import { Message } from '@/types/chat';
+import { RefObject } from 'react';
 
 interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
   onToggleSidebar: () => void;
   sidebarOpen?: boolean;
+  messagesContainerRef?: RefObject<HTMLDivElement>;
 }
 
-export const ChatContainer = ({ messages, isLoading, onToggleSidebar, sidebarOpen = false }: ChatContainerProps) => {
+export const ChatContainer = ({ 
+  messages, 
+  isLoading, 
+  onToggleSidebar, 
+  sidebarOpen = false,
+  messagesContainerRef 
+}: ChatContainerProps) => {
   console.log('ChatContainer render - sidebarOpen:', sidebarOpen);
   
   const handleToggleClick = () => {
@@ -47,7 +56,11 @@ export const ChatContainer = ({ messages, isLoading, onToggleSidebar, sidebarOpe
         <div className="w-8"></div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         {messages.map((message) => (
           <MessageBubble key={message.id} message={message} />
         ))}

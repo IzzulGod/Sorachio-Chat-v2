@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChatContainer } from '@/components/ChatContainer';
 import { Sidebar } from '@/components/Sidebar';
@@ -10,41 +11,56 @@ const Index = () => {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const { chats, currentChat, createNewChat, deleteChat, sendMessage, isLoading } = useChat(selectedChatId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    console.log('🔄 Attempting to scroll to bottom...');
+    
+    // First try to scroll the messages container
+    if (messagesContainerRef.current) {
+      console.log('📜 Scrolling messages container');
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+    
+    // Then scroll to the bottom element
+    if (messagesEndRef.current) {
+      console.log('📍 Scrolling to messagesEndRef');
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: "smooth",
+        block: "end",
+        inline: "nearest"
+      });
+    }
   }, []);
 
-  // Force scroll immediately when messages change
+  // Force scroll when messages change
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      scrollToBottom();
-    }, 100); // Small delay to ensure DOM has updated
-
-    return () => clearTimeout(timeoutId);
+    if (currentChat?.messages && currentChat.messages.length > 0) {
+      console.log('📨 Messages changed, scrolling...', currentChat.messages.length);
+      // Use multiple timeouts to ensure scroll works
+      setTimeout(scrollToBottom, 0);
+      setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToBottom, 300);
+    }
   }, [currentChat?.messages, scrollToBottom]);
 
-  // Additional scroll trigger for loading state changes
+  // Scroll when loading state changes
   useEffect(() => {
-    if (!isLoading) {
-      // When loading finishes (AI response received), scroll to bottom
+    if (!isLoading && currentChat?.messages && currentChat.messages.length > 0) {
+      console.log('✅ Loading finished, scrolling...');
       setTimeout(scrollToBottom, 200);
+      setTimeout(scrollToBottom, 500);
     }
-  }, [isLoading, scrollToBottom]);
+  }, [isLoading, scrollToBottom, currentChat?.messages]);
 
-  // Handle viewport height changes (mobile keyboard)
+  // Handle viewport changes
   useEffect(() => {
     const handleResize = () => {
-      // Force a scroll to bottom when viewport changes (keyboard open/close)
       setTimeout(scrollToBottom, 100);
     };
 
     const handleOrientationChange = () => {
-      // Handle orientation changes
-      setTimeout(() => {
-        scrollToBottom();
-      }, 300);
+      setTimeout(scrollToBottom, 300);
     };
 
     window.addEventListener('resize', handleResize);
@@ -72,8 +88,8 @@ const Index = () => {
   const handleSendMessage = async (content: string, image?: File) => {
     console.log('🚀 Sending message, will scroll to bottom after...');
     
-    // Scroll immediately when send button is clicked
-    setTimeout(scrollToBottom, 50);
+    // Immediate scroll when send is clicked
+    scrollToBottom();
     
     if (!selectedChatId) {
       const newChatId = createNewChat();
@@ -83,8 +99,10 @@ const Index = () => {
       await sendMessage(content, image, selectedChatId);
     }
     
-    // Scroll again after message is sent
-    setTimeout(scrollToBottom, 100);
+    // Force scroll after message sent
+    setTimeout(scrollToBottom, 50);
+    setTimeout(scrollToBottom, 200);
+    setTimeout(scrollToBottom, 500);
   };
 
   const handleNewChat = () => {
@@ -128,10 +146,7 @@ const Index = () => {
         onDeleteChat={handleDeleteChat}
       />
       
-      <div 
-        ref={chatContainerRef}
-        className="flex-1 flex flex-col relative chat-container w-full min-w-0"
-      >
+      <div className="flex-1 flex flex-col relative chat-container w-full min-w-0">
         {/* Sidebar overlay for mobile - positioned to only cover main content */}
         {sidebarOpen && (
           <div 
@@ -150,9 +165,11 @@ const Index = () => {
               isLoading={isLoading}
               onToggleSidebar={handleToggleSidebar}
               sidebarOpen={sidebarOpen}
+              messagesContainerRef={messagesContainerRef}
             />
           )}
-          <div ref={messagesEndRef} />
+          {/* Messages end marker - always present */}
+          <div ref={messagesEndRef} className="h-1" />
         </div>
         
         <div className="input-area flex-shrink-0">

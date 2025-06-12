@@ -1,3 +1,4 @@
+
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef } from 'react';
@@ -151,7 +152,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .message-content {
           line-height: 1.5;
         }

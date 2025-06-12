@@ -30,7 +30,7 @@ export const exportChatAsTXT = (chat: Chat) => {
   let txtContent = `Chat: ${chat.title}\n`;
   txtContent += `Created: ${new Date(chat.createdAt).toLocaleString()}\n`;
   txtContent += `Updated: ${new Date(chat.updatedAt).toLocaleString()}\n\n`;
-  txtContent += '=' * 50 + '\n\n';
+  txtContent += '='.repeat(50) + '\n\n';
 
   chat.messages.forEach((msg, index) => {
     const role = msg.role === 'user' ? 'User' : 'Sorachio';

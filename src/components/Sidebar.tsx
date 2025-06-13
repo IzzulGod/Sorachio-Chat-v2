@@ -102,7 +102,7 @@ export const Sidebar = ({
                     onClick={() => onSelectChat(chat.id)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0 pr-2">
+                      <div className="flex-1 min-w-0 pr-1">
                         <p className="text-sm font-medium text-foreground truncate">
                           {chat.title || 'New Chat'}
                         </p>
@@ -110,16 +110,16 @@ export const Sidebar = ({
                           {chat.messages.length} messages
                         </p>
                       </div>
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center gap-0.5">
                         {/* Export button */}
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => toggleExportMenu(e, chat.id)}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-accent text-muted-foreground hover:text-foreground flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1.5 h-7 w-7 hover:bg-accent text-muted-foreground hover:text-foreground flex-shrink-0"
                           title="Export chat"
                         >
-                          <Download size={16} />
+                          <Download size={14} />
                         </Button>
                         {/* Delete button */}
                         <Button
@@ -129,10 +129,10 @@ export const Sidebar = ({
                             e.stopPropagation();
                             onDeleteChat(chat.id);
                           }}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 hover:text-destructive text-muted-foreground flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1.5 h-7 w-7 hover:bg-destructive/10 hover:text-destructive text-muted-foreground flex-shrink-0"
                           title="Delete chat"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M3 6h18"/>
                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
                             <path d="M8 6V4c0-1 1-2 2-2h4c-1 0 2 1 2 2v2"/>

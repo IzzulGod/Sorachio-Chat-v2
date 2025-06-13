@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -82,7 +83,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Ketik pesan ke Sorachio..."
-            className="min-h-[44px] max-h-32 resize-none border-input rounded-xl pr-20 focus:ring-1 focus:ring-ring focus:border-ring bg-background text-foreground"
+            className="min-h-[44px] max-h-32 resize-none border-input rounded-xl pr-20 focus:ring-1 focus:ring-ring focus:border-ring bg-background text-foreground placeholder:text-muted-foreground"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -119,9 +120,9 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               variant="ghost"
               size="sm"
               onClick={toggleVoiceRecording}
-              className={`p-2 rounded-md ${isListening ? 'bg-destructive/10 hover:bg-destructive/20 text-destructive' : 'hover:bg-accent'}`}
+              className={`p-2 rounded-md ${isListening ? 'bg-destructive/10 hover:bg-destructive/20 text-destructive' : 'hover:bg-accent text-foreground'}`}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isListening ? 'text-destructive' : 'text-foreground'}>
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                 <line x1="12" y1="19" x2="12" y2="23"/>

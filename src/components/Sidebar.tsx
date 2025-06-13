@@ -1,5 +1,4 @@
 
-
 import { Button } from '@/components/ui/button';
 import { Chat } from '@/types/chat';
 import { Download, FileText, FileJson } from 'lucide-react';
@@ -52,7 +51,7 @@ export const Sidebar = ({
   return (
     <>
       {/* Mobile overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onClose} />
       
       {/* Sidebar */}
       <div className="fixed left-0 top-0 h-full w-64 md:w-80 bg-background border-r border-border z-50 md:relative">
@@ -65,9 +64,12 @@ export const Sidebar = ({
                 variant="ghost" 
                 size="sm" 
                 onClick={onClose}
-                className="md:hidden"
+                className="md:hidden text-foreground hover:bg-accent"
               >
-                ✕
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
               </Button>
             </div>
             <Button
@@ -114,7 +116,7 @@ export const Sidebar = ({
                           variant="ghost"
                           size="sm"
                           onClick={(e) => toggleExportMenu(e, chat.id)}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-600 dark:hover:text-blue-400 text-muted-foreground flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 hover:bg-accent text-muted-foreground hover:text-foreground flex-shrink-0"
                           title="Export chat"
                         >
                           <Download size={16} />
@@ -150,7 +152,7 @@ export const Sidebar = ({
                           variant="ghost"
                           size="sm"
                           onClick={(e) => handleExportJSON(e, chat)}
-                          className="w-full justify-start text-xs h-8 hover:bg-accent"
+                          className="w-full justify-start text-xs h-8 hover:bg-accent text-foreground"
                         >
                           <FileJson size={14} className="mr-2" />
                           Export as JSON
@@ -159,7 +161,7 @@ export const Sidebar = ({
                           variant="ghost"
                           size="sm"
                           onClick={(e) => handleExportTXT(e, chat)}
-                          className="w-full justify-start text-xs h-8 hover:bg-accent"
+                          className="w-full justify-start text-xs h-8 hover:bg-accent text-foreground"
                         >
                           <FileText size={14} className="mr-2" />
                           Export as TXT

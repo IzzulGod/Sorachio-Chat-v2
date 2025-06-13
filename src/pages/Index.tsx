@@ -135,7 +135,7 @@ const Index = () => {
   console.log('Index render - sidebarOpen:', sidebarOpen);
 
   return (
-    <div className="flex h-screen bg-white text-gray-900 overflow-hidden full-height">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden full-height">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={handleCloseSidebar}

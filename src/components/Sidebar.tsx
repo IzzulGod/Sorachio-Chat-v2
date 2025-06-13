@@ -110,16 +110,17 @@ export const Sidebar = ({
                           {chat.messages.length} messages
                         </p>
                       </div>
-                      <div className="flex items-center gap-0.5">
+                      <div className="flex items-center gap-0 md:gap-0.5">
                         {/* Export button */}
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => toggleExportMenu(e, chat.id)}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1.5 h-7 w-7 hover:bg-accent text-muted-foreground hover:text-foreground flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 md:p-1.5 h-6 w-6 md:h-7 md:w-7 hover:bg-accent text-muted-foreground hover:text-foreground flex-shrink-0"
                           title="Export chat"
                         >
-                          <Download size={14} />
+                          <Download size={12} className="md:hidden" />
+                          <Download size={14} className="hidden md:block" />
                         </Button>
                         {/* Delete button */}
                         <Button
@@ -129,10 +130,17 @@ export const Sidebar = ({
                             e.stopPropagation();
                             onDeleteChat(chat.id);
                           }}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1.5 h-7 w-7 hover:bg-destructive/10 hover:text-destructive text-muted-foreground flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 md:p-1.5 h-6 w-6 md:h-7 md:w-7 hover:bg-destructive/10 hover:text-destructive text-muted-foreground flex-shrink-0"
                           title="Delete chat"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="md:hidden">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c-1 0 2 1 2 2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                          </svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="hidden md:block">
                             <path d="M3 6h18"/>
                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
                             <path d="M8 6V4c0-1 1-2 2-2h4c-1 0 2 1 2 2v2"/>

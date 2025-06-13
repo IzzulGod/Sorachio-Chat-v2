@@ -58,7 +58,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     }
   }, [message.content, isUser]);
 
-  // Enhanced content processing for better markdown support
+  // Enhanced content processing for better markdown support and clickable links
   const processContent = (content: string) => {
     let processedContent = content;
 
@@ -130,9 +130,17 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     const hrRegex = /^(---|\*\*\*)$/gm;
     processedContent = processedContent.replace(hrRegex, '<hr class="markdown-hr">');
 
-    // Handle links [text](url)
-    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-    processedContent = processedContent.replace(linkRegex, '<a href="$2" class="markdown-link" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Handle markdown links [text](url) first
+    const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    processedContent = processedContent.replace(markdownLinkRegex, '<a href="$2" class="markdown-link clickable-link" target="_blank" rel="noopener noreferrer">$1</a>');
+
+    // Handle standalone URLs (http, https, www)
+    const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
+    processedContent = processedContent.replace(urlRegex, (url) => {
+      const fullUrl = url.startsWith('www.') ? `https://${url}` : url;
+      const displayUrl = url.length > 50 ? url.substring(0, 47) + '...' : url;
+      return `<a href="${fullUrl}" class="markdown-link clickable-link auto-link" target="_blank" rel="noopener noreferrer">${displayUrl}</a>`;
+    });
 
     // Convert remaining newlines to <br> but preserve block elements
     processedContent = processedContent.replace(/\n(?![<])/g, '<br>');
@@ -282,14 +290,39 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           margin: 16px 0;
         }
 
-        /* Links */
+        /* Links - Enhanced styling with hover effects */
         .message-content .markdown-link {
           color: #0066cc;
           text-decoration: underline;
+          transition: all 0.2s ease;
+          border-radius: 2px;
+          padding: 1px 2px;
         }
 
         .message-content .markdown-link:hover {
           color: #0052a3;
+          background-color: rgba(0, 102, 204, 0.1);
+          text-decoration: none;
+        }
+
+        .message-content .clickable-link {
+          cursor: pointer;
+          display: inline-block;
+        }
+
+        .message-content .auto-link {
+          font-family: monospace;
+          font-size: 0.9em;
+          background: rgba(0, 102, 204, 0.05);
+          padding: 2px 4px;
+          border-radius: 3px;
+          border: 1px solid rgba(0, 102, 204, 0.2);
+        }
+
+        .message-content .auto-link:hover {
+          background: rgba(0, 102, 204, 0.15);
+          border-color: rgba(0, 102, 204, 0.4);
+          transform: translateY(-1px);
         }
 
         /* Code blocks */
@@ -341,6 +374,21 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
         .bg-gray-900 .markdown-link {
           color: #66b3ff;
+        }
+
+        .bg-gray-900 .markdown-link:hover {
+          color: #4da6ff;
+          background-color: rgba(102, 179, 255, 0.2);
+        }
+
+        .bg-gray-900 .auto-link {
+          background: rgba(102, 179, 255, 0.1);
+          border-color: rgba(102, 179, 255, 0.3);
+        }
+
+        .bg-gray-900 .auto-link:hover {
+          background: rgba(102, 179, 255, 0.2);
+          border-color: rgba(102, 179, 255, 0.5);
         }
 
         .bg-gray-900 .markdown-blockquote {

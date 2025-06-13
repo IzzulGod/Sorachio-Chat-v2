@@ -116,7 +116,7 @@ export const Sidebar = ({
                           variant="ghost"
                           size="sm"
                           onClick={(e) => toggleExportMenu(e, chat.id)}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 md:p-1.5 h-6 w-6 md:h-7 md:w-7 hover:bg-accent text-muted-foreground hover:text-foreground flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 p-1 md:p-1.5 h-6 w-6 md:h-7 md:w-7 hover:bg-accent hover:scale-105 text-muted-foreground hover:text-foreground flex-shrink-0"
                           title="Export chat"
                         >
                           <Download size={12} className="md:hidden" />
@@ -130,7 +130,7 @@ export const Sidebar = ({
                             e.stopPropagation();
                             onDeleteChat(chat.id);
                           }}
-                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 md:p-1.5 h-6 w-6 md:h-7 md:w-7 hover:bg-destructive/10 hover:text-destructive text-muted-foreground flex-shrink-0"
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 p-1 md:p-1.5 h-6 w-6 md:h-7 md:w-7 hover:bg-destructive/10 hover:text-destructive hover:scale-105 text-muted-foreground flex-shrink-0"
                           title="Delete chat"
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="md:hidden">
@@ -155,23 +155,23 @@ export const Sidebar = ({
                   {/* Export menu */}
                   {expandedChatId === chat.id && (
                     <div className="px-3 pb-3">
-                      <div className="bg-muted rounded-md p-2 space-y-1">
+                      <div className="bg-muted/80 backdrop-blur-sm rounded-lg p-3 space-y-2 border border-border/50 shadow-lg">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => handleExportJSON(e, chat)}
-                          className="w-full justify-start text-xs h-8 hover:bg-accent text-foreground"
+                          className="w-full justify-start text-sm h-9 hover:bg-accent/80 hover:scale-[1.02] text-foreground transition-all duration-200 font-medium"
                         >
-                          <FileJson size={14} className="mr-2" />
+                          <FileJson size={16} className="mr-3 text-blue-500" />
                           Export as JSON
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => handleExportTXT(e, chat)}
-                          className="w-full justify-start text-xs h-8 hover:bg-accent text-foreground"
+                          className="w-full justify-start text-sm h-9 hover:bg-accent/80 hover:scale-[1.02] text-foreground transition-all duration-200 font-medium"
                         >
-                          <FileText size={14} className="mr-2" />
+                          <FileText size={16} className="mr-3 text-green-500" />
                           Export as TXT
                         </Button>
                       </div>

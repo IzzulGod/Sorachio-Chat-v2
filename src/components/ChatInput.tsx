@@ -1,5 +1,3 @@
-
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -109,7 +107,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               onClick={() => fileInputRef.current?.click()}
               className="p-2 hover:bg-accent rounded-md"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 <circle cx="9" cy="9" r="2"/>
                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
@@ -123,7 +121,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               onClick={toggleVoiceRecording}
               className={`p-2 rounded-md ${isListening ? 'bg-destructive/10 hover:bg-destructive/20 text-destructive' : 'hover:bg-accent'}`}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                 <line x1="12" y1="19" x2="12" y2="23"/>

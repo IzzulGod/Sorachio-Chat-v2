@@ -1,4 +1,3 @@
-
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -84,24 +83,35 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const processContent = (content: string) => {
     let processed = content;
 
-    // Code blocks with language detection
-    processed = processed.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
+    // Code blocks - improved regex
+    processed = processed.replace(/```([a-zA-Z]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'text';
-      const escapedCode = escapeHtml(code.trim());
-      const codeForCopy = code.trim().replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+      const cleanCode = code.trim();
+      const escapedCode = cleanCode
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
       
-      return `<div class="code-block-container mb-4">
-        <div class="code-block-header">
-          <span class="code-language">${language}</span>
-          <button class="copy-btn" onclick="navigator.clipboard.writeText('${codeForCopy}').then(() => { this.textContent = 'Copied!'; setTimeout(() => this.textContent = 'Copy', 2000); }).catch(() => { this.textContent = 'Failed'; setTimeout(() => this.textContent = 'Copy', 2000); })">Copy</button>
+      const copyCode = cleanCode.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+      
+      return `<div class="code-container">
+        <div class="code-header">
+          <span class="code-lang">${language}</span>
+          <button class="copy-button" onclick="copyToClipboard('${copyCode}', this)">Copy</button>
         </div>
-        <pre class="code-block"><code class="language-${language}">${escapedCode}</code></pre>
+        <pre class="code-pre"><code class="code-content">${escapedCode}</code></pre>
       </div>`;
     });
 
-    // Inline code
+    // Inline code - improved regex
     processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, (match, code) => {
-      return `<code class="inline-code">${escapeHtml(code)}</code>`;
+      const escapedCode = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return `<code class="inline-code">${escapedCode}</code>`;
     });
 
     // Headers
@@ -130,207 +140,259 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     return processed;
   };
 
-  const escapeHtml = (text: string) => {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  };
-
-  // CSS styles as string
-  const styles = `
-    .message-content {
-      line-height: 1.6;
-      word-wrap: break-word;
-    }
-
-    .message-content .katex {
-      font-size: 1.1em;
-    }
-
-    .message-content .katex-display {
-      margin: 16px 0;
-      text-align: center;
-      overflow-x: auto;
-    }
-
-    .message-content .katex-error {
-      color: #cc0000;
-      background: #ffebee;
-      padding: 2px 4px;
-      border-radius: 3px;
-    }
-
-    .message-content .header-1 { 
-      font-size: 1.4em; 
-      font-weight: bold; 
-      color: #1a1a1a; 
-    }
-    .message-content .header-2 { 
-      font-size: 1.25em; 
-      font-weight: bold; 
-      color: #1a1a1a; 
-    }
-    .message-content .header-3 { 
-      font-size: 1.15em; 
-      font-weight: bold; 
-      color: #1a1a1a; 
-    }
-
-    .dark .message-content .header-1,
-    .dark .message-content .header-2,
-    .dark .message-content .header-3 { 
-      color: #e5e5e5; 
-    }
-
-    .message-content strong { font-weight: bold; }
-    .message-content em { font-style: italic; }
-
-    .message-content .list {
-      padding-left: 20px;
-      list-style-type: disc;
-    }
-    .message-content .list-item {
-      margin: 4px 0;
-    }
-
-    .message-content .link {
-      color: #2563eb;
-      text-decoration: underline;
-      transition: color 0.2s;
-    }
-    .message-content .link:hover {
-      color: #1d4ed8;
-    }
-
-    .dark .message-content .link {
-      color: #60a5fa;
-    }
-    .dark .message-content .link:hover {
-      color: #93c5fd;
-    }
-
-    .message-content .code-block-container {
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      background: #f8f9fa;
-    }
-
-    .dark .message-content .code-block-container {
-      background: #1e293b;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-
-    .message-content .code-block-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #e5e7eb;
-      padding: 8px 12px;
-      border-bottom: 1px solid #d1d5db;
-      font-size: 12px;
-    }
-
-    .dark .message-content .code-block-header {
-      background: #334155;
-      border-bottom-color: #475569;
-      color: #e2e8f0;
-    }
-
-    .message-content .code-language {
-      font-weight: 600;
-      text-transform: uppercase;
-      color: #6b7280;
-      font-size: 11px;
-    }
-
-    .dark .message-content .code-language {
-      color: #94a3b8;
-    }
-
-    .message-content .copy-btn {
-      background: #ffffff;
-      border: 1px solid #d1d5db;
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
-      transition: all 0.2s;
-      color: #374151;
-    }
-
-    .message-content .copy-btn:hover {
-      background: #f3f4f6;
-      border-color: #9ca3af;
-    }
-
-    .dark .message-content .copy-btn {
-      background: #475569;
-      color: #e2e8f0;
-      border-color: #64748b;
-    }
-
-    .dark .message-content .copy-btn:hover {
-      background: #64748b;
-      border-color: #94a3b8;
-    }
-
-    .message-content .code-block {
-      background: #ffffff;
-      padding: 16px;
-      margin: 0;
-      overflow-x: auto;
-      font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 14px;
-      line-height: 1.5;
-      border: none;
-      color: #24292e;
-    }
-
-    .dark .message-content .code-block {
-      background: #0f172a;
-      color: #e2e8f0;
-    }
-
-    .message-content .inline-code {
-      background: #f3f4f6;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 0.9em;
-      color: #e11d48;
-      font-weight: 500;
-    }
-
-    .dark .message-content .inline-code {
-      background: #374151;
-      color: #fbbf24;
-    }
-
-    @media (max-width: 640px) {
-      .message-content .code-block {
-        font-size: 13px;
-        padding: 12px;
-      }
-      
-      .message-content .code-block-header {
-        padding: 6px 10px;
-      }
-      
-      .message-content .header-1 { font-size: 1.25em; }
-      .message-content .header-2 { font-size: 1.15em; }
-      .message-content .header-3 { font-size: 1.1em; }
-    }
-  `;
-
-  // Inject styles once
+  // Inject copy function and styles
   useEffect(() => {
+    // Add copy function to window
+    if (!(window as any).copyToClipboard) {
+      (window as any).copyToClipboard = (text: string, button: HTMLElement) => {
+        navigator.clipboard.writeText(text).then(() => {
+          const originalText = button.textContent;
+          button.textContent = 'Copied!';
+          button.style.backgroundColor = '#10b981';
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.style.backgroundColor = '';
+          }, 2000);
+        }).catch(() => {
+          button.textContent = 'Failed';
+          setTimeout(() => {
+            button.textContent = 'Copy';
+          }, 2000);
+        });
+      };
+    }
+
+    // Inject styles
     const styleId = 'message-bubble-styles';
     if (!document.getElementById(styleId)) {
-      const styleElement = document.createElement('style');
-      styleElement.id = styleId;
-      styleElement.textContent = styles;
-      document.head.appendChild(styleElement);
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        .message-content {
+          line-height: 1.6;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        }
+
+        .message-content .code-container {
+          margin: 16px 0;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dark .message-content .code-container {
+          background: #1a1b23;
+          border-color: #333742;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .message-content .code-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 16px;
+          background: #e9ecef;
+          border-bottom: 1px solid #dee2e6;
+          font-size: 12px;
+        }
+
+        .dark .message-content .code-header {
+          background: #2d3748;
+          border-bottom-color: #4a5568;
+          color: #e2e8f0;
+        }
+
+        .message-content .code-lang {
+          font-weight: 600;
+          text-transform: uppercase;
+          color: #6c757d;
+          font-size: 11px;
+        }
+
+        .dark .message-content .code-lang {
+          color: #a0aec0;
+        }
+
+        .message-content .copy-button {
+          background: #ffffff;
+          border: 1px solid #ced4da;
+          padding: 4px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 11px;
+          font-weight: 500;
+          color: #495057;
+          transition: all 0.2s ease;
+        }
+
+        .message-content .copy-button:hover {
+          background: #f8f9fa;
+          border-color: #adb5bd;
+        }
+
+        .dark .message-content .copy-button {
+          background: #4a5568;
+          color: #e2e8f0;
+          border-color: #718096;
+        }
+
+        .dark .message-content .copy-button:hover {
+          background: #718096;
+          border-color: #a0aec0;
+        }
+
+        .message-content .code-pre {
+          margin: 0;
+          padding: 16px;
+          overflow-x: auto;
+          background: #ffffff;
+          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+          font-size: 14px;
+          line-height: 1.4;
+          color: #24292e;
+          white-space: pre;
+        }
+
+        .dark .message-content .code-pre {
+          background: #0d1117;
+          color: #f0f6fc;
+        }
+
+        .message-content .code-content {
+          display: block;
+          background: none;
+          border: none;
+          padding: 0;
+          margin: 0;
+          font-family: inherit;
+          font-size: inherit;
+          color: inherit;
+          white-space: pre;
+          overflow-x: auto;
+        }
+
+        .message-content .inline-code {
+          background: #f1f3f4;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+          font-size: 0.9em;
+          color: #d73a49;
+          font-weight: 500;
+          border: 1px solid #e1e4e8;
+        }
+
+        .dark .message-content .inline-code {
+          background: #282c34;
+          color: #98c379;
+          border-color: #444c56;
+        }
+
+        /* Mobile responsive styles */
+        @media (max-width: 640px) {
+          .message-content .code-container {
+            margin: 12px 0;
+            border-radius: 6px;
+          }
+          
+          .message-content .code-header {
+            padding: 6px 12px;
+            font-size: 11px;
+          }
+          
+          .message-content .code-pre {
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.3;
+          }
+          
+          .message-content .copy-button {
+            padding: 3px 8px;
+            font-size: 10px;
+          }
+        }
+
+        /* Headers styling */
+        .message-content .header-1 { 
+          font-size: 1.4em; 
+          font-weight: bold; 
+          color: #1a1a1a;
+          margin: 16px 0 8px 0;
+        }
+        .message-content .header-2 { 
+          font-size: 1.25em; 
+          font-weight: bold; 
+          color: #1a1a1a;
+          margin: 14px 0 6px 0;
+        }
+        .message-content .header-3 { 
+          font-size: 1.15em; 
+          font-weight: bold; 
+          color: #1a1a1a;
+          margin: 12px 0 4px 0;
+        }
+
+        .dark .message-content .header-1,
+        .dark .message-content .header-2,
+        .dark .message-content .header-3 { 
+          color: #e5e5e5; 
+        }
+
+        .message-content strong { font-weight: bold; }
+        .message-content em { font-style: italic; }
+
+        .message-content .list {
+          padding-left: 20px;
+          list-style-type: disc;
+          margin: 8px 0;
+        }
+        .message-content .list-item {
+          margin: 4px 0;
+        }
+
+        .message-content .link {
+          color: #0366d6;
+          text-decoration: underline;
+          transition: color 0.2s;
+        }
+        .message-content .link:hover {
+          color: #0256cc;
+        }
+
+        .dark .message-content .link {
+          color: #58a6ff;
+        }
+        .dark .message-content .link:hover {
+          color: #79c0ff;
+        }
+
+        /* KaTeX styles */
+        .message-content .katex {
+          font-size: 1.1em;
+        }
+
+        .message-content .katex-display {
+          margin: 16px 0;
+          text-align: center;
+          overflow-x: auto;
+        }
+
+        .message-content .katex-error {
+          color: #d73a49;
+          background: #ffeef0;
+          padding: 2px 4px;
+          border-radius: 3px;
+        }
+
+        .dark .message-content .katex-error {
+          color: #ff7b72;
+          background: #490202;
+        }
+      `;
+      document.head.appendChild(style);
     }
   }, []);
   
@@ -345,10 +407,10 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       )}
       
       <div className={`
-        px-4 py-3 rounded-lg relative
+        px-4 py-3 rounded-lg relative overflow-hidden
         ${isUser 
           ? 'bg-blue-600 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]'
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[80%] lg:max-w-[70%] xl:max-w-[65%]'
         }
       `}>
         {message.image && (

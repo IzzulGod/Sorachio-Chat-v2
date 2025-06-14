@@ -12,16 +12,25 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [katexReady, setKatexReady] = useState(false);
   
-  // Log message content for debugging
+  // Enhanced logging for mobile debugging
   useEffect(() => {
-    console.log('MessageBubble rendering:', {
+    const isMobile = window.innerWidth <= 768;
+    console.log('🔍 MessageBubble Mobile Debug:', {
       role: message.role,
       contentLength: message.content?.length || 0,
       contentPreview: message.content?.substring(0, 100),
       hasImage: !!message.image,
-      isMobile: window.innerWidth <= 768
+      isMobile,
+      userAgent: navigator.userAgent,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio
     });
-  }, [message]);
+    
+    if (!isUser && message.content) {
+      console.log('📝 Full AI message content:', message.content);
+    }
+  }, [message, isUser]);
   
   // Load KaTeX for math rendering
   useEffect(() => {
@@ -30,9 +39,12 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     const loadKaTeX = async () => {
       try {
         if ((window as any).katex && (window as any).renderMathInElement) {
+          console.log('✅ KaTeX already loaded');
           setKatexReady(true);
           return;
         }
+
+        console.log('⏳ Loading KaTeX...');
 
         // Load CSS first
         if (!document.querySelector('link[href*="katex"]')) {
@@ -40,6 +52,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           link.rel = 'stylesheet';
           link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
           document.head.appendChild(link);
+          console.log('📄 KaTeX CSS loaded');
         }
 
         // Load KaTeX JS
@@ -48,9 +61,13 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
             const script1 = document.createElement('script');
             script1.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
             script1.onload = () => {
+              console.log('📜 KaTeX JS loaded');
               const script2 = document.createElement('script');
               script2.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
-              script2.onload = () => resolve(true);
+              script2.onload = () => {
+                console.log('🔧 KaTeX auto-render loaded');
+                resolve(true);
+              };
               document.head.appendChild(script2);
             };
             document.head.appendChild(script1);
@@ -58,8 +75,9 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         }
         
         setKatexReady(true);
+        console.log('✅ KaTeX fully ready');
       } catch (error) {
-        console.warn('KaTeX loading failed:', error);
+        console.warn('❌ KaTeX loading failed:', error);
       }
     };
 
@@ -73,6 +91,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     const renderMath = () => {
       try {
         if ((window as any).renderMathInElement && contentRef.current) {
+          console.log('🔢 Rendering math...');
           (window as any).renderMathInElement(contentRef.current, {
             delimiters: [
               { left: '$$', right: '$$', display: true },
@@ -83,31 +102,38 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
             throwOnError: false,
             errorColor: '#cc0000'
           });
+          console.log('✅ Math rendering complete');
         }
       } catch (error) {
-        console.warn('Math rendering failed:', error);
+        console.warn('❌ Math rendering failed:', error);
       }
     };
 
     setTimeout(renderMath, 100);
   }, [katexReady, message.content, isUser]);
 
-  // Simple content processing without copy functionality
+  // Simple content processing
   const processContent = (content: string) => {
     const isMobile = window.innerWidth <= 768;
-    console.log('Processing content:', {
+    console.log('🔄 Processing content for mobile:', {
       originalLength: content.length,
       contentPreview: content.substring(0, 200),
-      isMobile
+      isMobile,
+      hasCodeBlocks: content.includes('```')
     });
     
     let processed = content;
 
-    // Process code blocks without copy button
+    // Process code blocks with very simple mobile-first approach
     processed = processed.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'plaintext';
       const cleanCode = code.trim();
-      console.log('Found code block:', { language, codeLength: cleanCode.length });
+      console.log('📦 Processing code block:', { 
+        language, 
+        codeLength: cleanCode.length, 
+        isMobile,
+        preview: cleanCode.substring(0, 50)
+      });
       
       const escapedCode = cleanCode
         .replace(/&/g, '&amp;')
@@ -115,38 +141,80 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      return `
-        <div class="code-block-wrapper" style="margin: 16px 0; border-radius: 8px; overflow: hidden; background: #f8f9fa; border: 1px solid #e9ecef; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;">
-          <div class="code-header" style="padding: 8px 16px; background: #e9ecef; border-bottom: 1px solid #dee2e6; font-size: 12px;">
-            <span class="code-lang" style="font-weight: 600; text-transform: uppercase; color: #6c757d;">${language}</span>
-          </div>
-          <pre class="code-content" style="padding: 16px; margin: 0; overflow-x: auto; background: #fff; color: #24292e; font-size: 14px; line-height: 1.4;"><code style="background: none; padding: 0; border-radius: 0; font-family: inherit; font-size: inherit; color: inherit;">${escapedCode}</code></pre>
+      // Mobile-optimized code block with inline styles
+      const fontSize = isMobile ? '12px' : '14px';
+      const padding = isMobile ? '8px' : '12px';
+      const margin = isMobile ? '8px 0' : '12px 0';
+      
+      const result = `
+        <div style="
+          margin: ${margin}; 
+          border-radius: 6px; 
+          overflow: hidden; 
+          background: #f8f9fa; 
+          border: 1px solid #e9ecef; 
+          font-family: 'SF Mono', Monaco, Consolas, monospace;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+        ">
+          <div style="
+            padding: 6px 12px; 
+            background: #e9ecef; 
+            border-bottom: 1px solid #dee2e6; 
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6c757d;
+          ">${language}</div>
+          <pre style="
+            padding: ${padding}; 
+            margin: 0; 
+            overflow-x: auto; 
+            background: #fff; 
+            color: #24292e; 
+            font-size: ${fontSize}; 
+            line-height: 1.4;
+            white-space: pre;
+            word-wrap: break-word;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            box-sizing: border-box;
+          "><code style="
+            background: none; 
+            padding: 0; 
+            border-radius: 0; 
+            font-family: inherit; 
+            font-size: inherit; 
+            color: inherit;
+            white-space: pre;
+            word-wrap: break-word;
+          ">${escapedCode}</code></pre>
         </div>
       `;
+      
+      console.log('✅ Code block processed for mobile');
+      return result;
     });
 
-    // Process inline code with inline styles for better mobile compatibility
+    // Process inline code
     processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, 
-      '<code style="background: #f1f3f4; padding: 2px 6px; border-radius: 4px; font-family: \'SF Mono\', \'Monaco\', monospace; font-size: 0.9em; color: #d73a49; border: 1px solid #e1e4e8;">$1</code>');
+      '<code style="background: #f1f3f4; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #d73a49;">$1</code>');
 
-    // Headers with inline styles
+    // Headers
     processed = processed.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
       const level = hashes.length;
-      const styles = {
-        1: 'font-size: 1.5em; font-weight: bold; margin: 16px 0 8px 0;',
-        2: 'font-size: 1.3em; font-weight: bold; margin: 14px 0 6px 0;',
-        3: 'font-size: 1.1em; font-weight: bold; margin: 12px 0 4px 0;'
-      };
-      return `<h${level} style="${styles[level as keyof typeof styles] || styles[3]}">${text.trim()}</h${level}>`;
+      const fontSize = isMobile ? '1.2em' : '1.4em';
+      return `<h${level} style="font-size: ${fontSize}; font-weight: bold; margin: 12px 0 6px 0;">${text.trim()}</h${level}>`;
     });
 
     // Bold and italic
     processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-    // Lists with inline styles
+    // Lists
     processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li style="margin: 4px 0;">$1</li>');
-    processed = processed.replace(/(<li.*?>.*<\/li>)/gs, '<ul style="padding-left: 20px; margin: 8px 0;">$1</ul>');
+    processed = processed.replace(/(<li.*?>.*<\/li>)/gs, '<ul style="padding-left: 16px; margin: 8px 0;">$1</ul>');
 
     // Links
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
@@ -155,112 +223,14 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     // Line breaks
     processed = processed.replace(/\n/g, '<br>');
 
-    console.log('Processed content:', {
+    console.log('✅ Content processing complete:', {
       processedLength: processed.length,
-      processedPreview: processed.substring(0, 200)
+      hasCodeElements: processed.includes('<pre'),
+      isMobile
     });
 
     return processed;
   };
-
-  // Mobile-friendly styles with better specificity
-  useEffect(() => {
-    const styleId = 'message-styles-mobile';
-    if (!document.getElementById(styleId)) {
-      const style = document.createElement('style');
-      style.id = styleId;
-      style.textContent = `
-        /* Mobile-first approach for code blocks */
-        .code-block-wrapper {
-          margin: 12px 0 !important;
-          border-radius: 6px !important;
-          overflow: hidden !important;
-          background: #f8f9fa !important;
-          border: 1px solid #e9ecef !important;
-          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace !important;
-          max-width: 100% !important;
-          font-size: 13px !important;
-        }
-        
-        .code-header {
-          padding: 6px 12px !important;
-          background: #e9ecef !important;
-          border-bottom: 1px solid #dee2e6 !important;
-          font-size: 11px !important;
-        }
-        
-        .code-lang {
-          font-weight: 600 !important;
-          text-transform: uppercase !important;
-          color: #6c757d !important;
-        }
-        
-        .code-content {
-          padding: 12px !important;
-          margin: 0 !important;
-          overflow-x: auto !important;
-          background: #fff !important;
-          color: #24292e !important;
-          font-size: 13px !important;
-          line-height: 1.4 !important;
-          -webkit-overflow-scrolling: touch !important;
-        }
-        
-        .code-content code {
-          background: none !important;
-          padding: 0 !important;
-          border-radius: 0 !important;
-          font-family: inherit !important;
-          font-size: inherit !important;
-          color: inherit !important;
-        }
-        
-        /* Dark theme support */
-        @media (prefers-color-scheme: dark) {
-          .code-block-wrapper {
-            background: #1e1e1e !important;
-            border-color: #404040 !important;
-          }
-          
-          .code-header {
-            background: #2d2d2d !important;
-            border-bottom-color: #404040 !important;
-          }
-          
-          .code-lang {
-            color: #9ca3af !important;
-          }
-          
-          .code-content {
-            background: #0d1117 !important;
-            color: #f0f6fc !important;
-          }
-        }
-        
-        /* Ensure math rendering works on mobile */
-        .katex {
-          font-size: 1em !important;
-          max-width: 100% !important;
-          overflow-x: auto !important;
-        }
-        
-        .katex-display {
-          margin: 12px 0 !important;
-          text-align: center !important;
-          overflow-x: auto !important;
-          overflow-y: hidden !important;
-          -webkit-overflow-scrolling: touch !important;
-        }
-        
-        .katex-display > .katex {
-          display: inline-block !important;
-          white-space: nowrap !important;
-          max-width: 100% !important;
-        }
-      `;
-      document.head.appendChild(style);
-    }
-  }, []);
   
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-3 w-full`}>
@@ -275,7 +245,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       <div className={`
         px-4 py-3 rounded-lg relative overflow-hidden
         ${isUser 
-          ? 'bg-gray-600 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
+          ? 'bg-gray-500 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
           : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]'
         }
       `}>
@@ -293,6 +263,12 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           <div
             ref={contentRef}
             className="text-sm break-words"
+            style={{ 
+              wordWrap: 'break-word', 
+              overflowWrap: 'break-word',
+              width: '100%',
+              maxWidth: '100%'
+            }}
             dangerouslySetInnerHTML={{ __html: processContent(message.content) }}
           />
         )}

@@ -1,4 +1,3 @@
-
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -11,6 +10,16 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const isUser = message.role === 'user';
   const contentRef = useRef<HTMLDivElement>(null);
   const [katexReady, setKatexReady] = useState(false);
+  
+  // Log message content for debugging
+  useEffect(() => {
+    console.log('MessageBubble rendering:', {
+      role: message.role,
+      contentLength: message.content?.length || 0,
+      contentPreview: message.content?.substring(0, 100),
+      hasImage: !!message.image
+    });
+  }, [message]);
   
   // Load KaTeX for math rendering
   useEffect(() => {
@@ -83,12 +92,19 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
   // Simple content processing without copy functionality
   const processContent = (content: string) => {
+    console.log('Processing content:', {
+      originalLength: content.length,
+      contentPreview: content.substring(0, 200)
+    });
+    
     let processed = content;
 
     // Process code blocks without copy button
     processed = processed.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'plaintext';
       const cleanCode = code.trim();
+      console.log('Found code block:', { language, codeLength: cleanCode.length });
+      
       const escapedCode = cleanCode
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -128,6 +144,11 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
     // Line breaks
     processed = processed.replace(/\n/g, '<br>');
+
+    console.log('Processed content:', {
+      processedLength: processed.length,
+      processedPreview: processed.substring(0, 200)
+    });
 
     return processed;
   };
@@ -255,7 +276,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       <div className={`
         px-4 py-3 rounded-lg relative overflow-hidden
         ${isUser 
-          ? 'bg-blue-600 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
+          ? 'bg-gray-600 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
           : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]'
         }
       `}>

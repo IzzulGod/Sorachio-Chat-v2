@@ -109,7 +109,7 @@ export const useChat = (selectedChatId: string | null) => {
         }
       ];
 
-      console.log('📝 Prepared messages:', messages);
+      console.log('📝 Prepared messages for API:', messages);
 
       // Process image if provided
       let imageData = null;
@@ -201,10 +201,14 @@ export const useChat = (selectedChatId: string | null) => {
       }
 
       const data = await response.json();
-      console.log('✅ Response data:', data);
+      console.log('✅ Full API Response data:', data);
       
       const aiResponse = data.choices?.[0]?.message?.content || 'Maaf, aku lagi error nih. Coba lagi ya!';
-      console.log('🤖 AI Response:', aiResponse);
+      console.log('🤖 Extracted AI Response:', {
+        response: aiResponse,
+        responseLength: aiResponse.length,
+        responseType: typeof aiResponse
+      });
 
       // Create AI message
       const aiMessage: Message = {
@@ -213,6 +217,8 @@ export const useChat = (selectedChatId: string | null) => {
         content: aiResponse,
         timestamp: new Date(),
       };
+
+      console.log('🤖 Created AI message object:', aiMessage);
 
       // Add AI message to chat
       setChats(prev => prev.map(chat => 
@@ -225,7 +231,7 @@ export const useChat = (selectedChatId: string | null) => {
           : chat
       ));
 
-      console.log('✅ Message sent successfully');
+      console.log('✅ Message sent successfully and added to chat');
 
     } catch (error) {
       console.error('❌ Error sending message:', error);

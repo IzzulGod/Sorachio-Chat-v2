@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { PaperPlane } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface ChatInputProps {
@@ -210,7 +209,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
-              <PaperPlane size={16} />
+              <Send size={16} />
             )}
           </Button>
         </div>

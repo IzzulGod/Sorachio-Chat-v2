@@ -1,15 +1,7 @@
+
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-
-// Import KaTeX for math rendering
-declare global {
-  interface Window {
-    katex: any;
-    renderMathInElement: any;
-    Prism: any;
-  }
-}
+import { useEffect, useRef, useState } from 'react';
 
 interface MessageBubbleProps {
   message: Message;
@@ -18,151 +10,197 @@ interface MessageBubbleProps {
 export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const isUser = message.role === 'user';
   const contentRef = useRef<HTMLDivElement>(null);
+  const [mathLoaded, setMathLoaded] = useState(false);
   
+  // Load KaTeX resources once
   useEffect(() => {
-    if (contentRef.current && !isUser) {
-      // Load KaTeX and auto-render if not already loaded
-      const loadKaTeX = async () => {
+    const loadMathResources = async () => {
+      if (mathLoaded) return;
+      
+      try {
+        // Check if KaTeX is already loaded
+        if (window.katex && window.renderMathInElement) {
+          setMathLoaded(true);
+          return;
+        }
+
+        // Load CSS first
+        if (!document.querySelector('link[href*="katex.min.css"]')) {
+          const cssLink = document.createElement('link');
+          cssLink.rel = 'stylesheet';
+          cssLink.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
+          cssLink.crossOrigin = 'anonymous';
+          document.head.appendChild(cssLink);
+        }
+
+        // Load KaTeX script
         if (!window.katex) {
-          const katexScript = document.createElement('script');
-          katexScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.js';
-          katexScript.crossOrigin = 'anonymous';
-          document.head.appendChild(katexScript);
-          
-          const autoRenderScript = document.createElement('script');
-          autoRenderScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min.js';
-          autoRenderScript.crossOrigin = 'anonymous';
-          document.head.appendChild(autoRenderScript);
-          
-          await new Promise((resolve) => {
-            autoRenderScript.onload = resolve;
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
+            script.crossOrigin = 'anonymous';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
           });
         }
-        
-        // Wait a bit more to ensure scripts are fully loaded
-        setTimeout(() => {
-          if (window.renderMathInElement && contentRef.current) {
-            try {
-              window.renderMathInElement(contentRef.current, {
-                delimiters: [
-                  { left: '$$', right: '$$', display: true },
-                  { left: '$', right: '$', display: false },
-                  { left: '\\[', right: '\\]', display: true },
-                  { left: '\\(', right: '\\)', display: false }
-                ],
-                throwOnError: false,
-                errorColor: '#cc0000',
-                strict: false,
-                trust: true,
-                macros: {
-                  '\\RR': '\\mathbb{R}',
-                  '\\NN': '\\mathbb{N}',
-                  '\\ZZ': '\\mathbb{Z}',
-                  '\\QQ': '\\mathbb{Q}',
-                  '\\CC': '\\mathbb{C}'
-                }
-              });
-            } catch (error) {
-              console.warn('KaTeX rendering failed:', error);
-            }
-          }
-        }, 100);
-      };
-      
-      loadKaTeX();
 
-      // Highlight code blocks with Prism
-      if (window.Prism) {
-        try {
-          window.Prism.highlightAllUnder(contentRef.current);
-        } catch (error) {
-          console.warn('Prism highlighting failed:', error);
+        // Load auto-render extension
+        if (!window.renderMathInElement) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
+            script.crossOrigin = 'anonymous';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
         }
-      }
-    }
-  }, [message.content, isUser]);
 
-  // Enhanced content processing for better markdown support and clickable links
+        setMathLoaded(true);
+      } catch (error) {
+        console.error('Failed to load KaTeX:', error);
+      }
+    };
+
+    if (!isUser) {
+      loadMathResources();
+    }
+  }, [isUser, mathLoaded]);
+
+  // Render math after content changes
+  useEffect(() => {
+    if (!mathLoaded || !contentRef.current || isUser) return;
+
+    const renderMath = () => {
+      try {
+        if (window.renderMathInElement && contentRef.current) {
+          window.renderMathInElement(contentRef.current, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '\\(', right: '\\)', display: false }
+            ],
+            throwOnError: false,
+            errorColor: '#cc0000',
+            strict: false,
+            trust: (context) => ['\\htmlId', '\\href'].includes(context.command),
+            macros: {
+              '\\RR': '\\mathbb{R}',
+              '\\NN': '\\mathbb{N}',
+              '\\ZZ': '\\mathbb{Z}',
+              '\\QQ': '\\mathbb{Q}',
+              '\\CC': '\\mathbb{C}',
+              '\\FF': '\\mathbb{F}'
+            }
+          });
+        }
+      } catch (error) {
+        console.error('KaTeX rendering error:', error);
+      }
+    };
+
+    // Use multiple attempts to ensure rendering
+    const timeouts = [50, 200, 500];
+    timeouts.forEach(delay => {
+      setTimeout(renderMath, delay);
+    });
+  }, [mathLoaded, message.content, isUser]);
+
   const processContent = (content: string) => {
+    // First, protect math expressions by replacing them with placeholders
+    const mathExpressions: { placeholder: string; original: string; type: 'display' | 'inline' }[] = [];
+    let processedContent = content;
+    let mathIndex = 0;
+
+    // Protect display math $$...$$
+    processedContent = processedContent.replace(/\$\$([\s\S]*?)\$\$/g, (match) => {
+      const placeholder = `__MATH_DISPLAY_${mathIndex}__`;
+      mathExpressions.push({ placeholder, original: match, type: 'display' });
+      mathIndex++;
+      return placeholder;
+    });
+
+    // Protect LaTeX display math \[...\]
+    processedContent = processedContent.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
+      const placeholder = `__MATH_DISPLAY_${mathIndex}__`;
+      mathExpressions.push({ placeholder, original: match, type: 'display' });
+      mathIndex++;
+      return placeholder;
+    });
+
+    // Protect inline math $...$
+    processedContent = processedContent.replace(/\$([^$\n\r]+)\$/g, (match) => {
+      const placeholder = `__MATH_INLINE_${mathIndex}__`;
+      mathExpressions.push({ placeholder, original: match, type: 'inline' });
+      mathIndex++;
+      return placeholder;
+    });
+
+    // Protect LaTeX inline math \(...\)
+    processedContent = processedContent.replace(/\\\(([\s\S]*?)\\\)/g, (match) => {
+      const placeholder = `__MATH_INLINE_${mathIndex}__`;
+      mathExpressions.push({ placeholder, original: match, type: 'inline' });
+      mathIndex++;
+      return placeholder;
+    });
+
+    // Process markdown for other elements
+    processedContent = processMarkdown(processedContent);
+
+    // Restore math expressions
+    mathExpressions.forEach(({ placeholder, original, type }) => {
+      const mathClass = type === 'display' ? 'math-display' : 'math-inline';
+      processedContent = processedContent.replace(
+        placeholder, 
+        `<span class="${mathClass}">${escapeHtml(original)}</span>`
+      );
+    });
+
+    return processedContent;
+  };
+
+  const processMarkdown = (content: string) => {
     let processedContent = content;
 
-    // PERBAIKAN: Jangan proses LaTeX math di dalam processContent
-    // Simpan math expressions dan ganti dengan placeholder
-    const mathExpressions: string[] = [];
-    
-    // Handle display math $$...$$
-    processedContent = processedContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
-      const index = mathExpressions.length;
-      mathExpressions.push(match);
-      return `__MATH_DISPLAY_${index}__`;
-    });
-    
-    // Handle inline math $...$
-    processedContent = processedContent.replace(/\$([^$\n]+)\$/g, (match, math) => {
-      const index = mathExpressions.length;
-      mathExpressions.push(match);
-      return `__MATH_INLINE_${index}__`;
-    });
-    
-    // Handle LaTeX style \[...\]
-    processedContent = processedContent.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
-      const index = mathExpressions.length;
-      mathExpressions.push(match);
-      return `__MATH_DISPLAY_${index}__`;
-    });
-    
-    // Handle LaTeX style \(...\)
-    processedContent = processedContent.replace(/\\\(([\s\S]*?)\\\)/g, (match, math) => {
-      const index = mathExpressions.length;
-      mathExpressions.push(match);
-      return `__MATH_INLINE_${index}__`;
-    });
-
     // Handle code blocks first (```language\ncode\n```)
-    const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
-    processedContent = processedContent.replace(codeBlockRegex, (match, language, code) => {
+    processedContent = processedContent.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, language, code) => {
       const lang = language || 'text';
       return `<pre class="code-block"><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`;
     });
 
     // Handle inline code (`code`)
-    const inlineCodeRegex = /`([^`\n]+)`/g;
-    processedContent = processedContent.replace(inlineCodeRegex, (match, code) => {
+    processedContent = processedContent.replace(/`([^`\n]+)`/g, (match, code) => {
       return `<code class="inline-code">${escapeHtml(code)}</code>`;
     });
 
     // Handle headers (# ## ###)
-    const headerRegex = /^(#{1,6})\s+(.+)$/gm;
-    processedContent = processedContent.replace(headerRegex, (match, hashes, text) => {
+    processedContent = processedContent.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
       const level = hashes.length;
       return `<h${level} class="markdown-header markdown-h${level}">${text.trim()}</h${level}>`;
     });
 
     // Handle bold text (**text** or __text__)
-    const boldRegex = /(\*\*|__)(.*?)\1/g;
-    processedContent = processedContent.replace(boldRegex, '<strong class="markdown-bold">$2</strong>');
+    processedContent = processedContent.replace(/(\*\*|__)(.*?)\1/g, '<strong class="markdown-bold">$2</strong>');
 
     // Handle italic text (*text* or _text_)
-    const italicRegex = /(\*|_)(.*?)\1/g;
-    processedContent = processedContent.replace(italicRegex, '<em class="markdown-italic">$2</em>');
+    processedContent = processedContent.replace(/(\*|_)(.*?)\1/g, '<em class="markdown-italic">$2</em>');
 
     // Handle strikethrough (~~text~~)
-    const strikethroughRegex = /~~(.*?)~~/g;
-    processedContent = processedContent.replace(strikethroughRegex, '<del class="markdown-strikethrough">$1</del>');
+    processedContent = processedContent.replace(/~~(.*?)~~/g, '<del class="markdown-strikethrough">$1</del>');
 
     // Handle blockquotes (> text)
-    const blockquoteRegex = /^>\s+(.+)$/gm;
-    processedContent = processedContent.replace(blockquoteRegex, '<blockquote class="markdown-blockquote">$1</blockquote>');
+    processedContent = processedContent.replace(/^>\s+(.+)$/gm, '<blockquote class="markdown-blockquote">$1</blockquote>');
 
     // Handle unordered lists (- item or * item)
-    const unorderedListRegex = /^[\-\*]\s+(.+)$/gm;
-    let listItems: string[] = [];
-    processedContent = processedContent.replace(unorderedListRegex, (match, item) => {
+    const listRegex = /^[\-\*]\s+(.+)$/gm;
+    const listItems: string[] = [];
+    processedContent = processedContent.replace(listRegex, (match, item) => {
       listItems.push(`<li class="markdown-list-item">${item.trim()}</li>`);
       return '___LIST_ITEM___';
     });
 
-    // Group consecutive list items
     if (listItems.length > 0) {
       const listContent = `<ul class="markdown-list">${listItems.join('')}</ul>`;
       processedContent = processedContent.replace(/___LIST_ITEM___(\n___LIST_ITEM___)*/g, listContent);
@@ -170,42 +208,32 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
     // Handle ordered lists (1. item)
     const orderedListRegex = /^\d+\.\s+(.+)$/gm;
-    let orderedListItems: string[] = [];
+    const orderedListItems: string[] = [];
     processedContent = processedContent.replace(orderedListRegex, (match, item) => {
       orderedListItems.push(`<li class="markdown-list-item">${item.trim()}</li>`);
       return '___ORDERED_LIST_ITEM___';
     });
 
-    // Group consecutive ordered list items
     if (orderedListItems.length > 0) {
       const orderedListContent = `<ol class="markdown-ordered-list">${orderedListItems.join('')}</ol>`;
       processedContent = processedContent.replace(/___ORDERED_LIST_ITEM___(\n___ORDERED_LIST_ITEM___)*/g, orderedListContent);
     }
 
     // Handle horizontal rules (--- or ***)
-    const hrRegex = /^(---|\*\*\*)$/gm;
-    processedContent = processedContent.replace(hrRegex, '<hr class="markdown-hr">');
+    processedContent = processedContent.replace(/^(---|\*\*\*)$/gm, '<hr class="markdown-hr">');
 
-    // Handle markdown links [text](url) first
-    const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-    processedContent = processedContent.replace(markdownLinkRegex, '<a href="$2" class="markdown-link clickable-link" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Handle markdown links [text](url)
+    processedContent = processedContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="markdown-link clickable-link" target="_blank" rel="noopener noreferrer">$1</a>');
 
     // Handle standalone URLs (http, https, www)
-    const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
-    processedContent = processedContent.replace(urlRegex, (url) => {
+    processedContent = processedContent.replace(/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g, (url) => {
       const fullUrl = url.startsWith('www.') ? `https://${url}` : url;
       const displayUrl = url.length > 50 ? url.substring(0, 47) + '...' : url;
       return `<a href="${fullUrl}" class="markdown-link clickable-link auto-link" target="_blank" rel="noopener noreferrer">${displayUrl}</a>`;
     });
 
-    // Convert remaining newlines to <br> but preserve block elements
+    // Convert remaining newlines to <br>
     processedContent = processedContent.replace(/\n(?![<])/g, '<br>');
-
-    // PERBAIKAN: Kembalikan math expressions
-    mathExpressions.forEach((mathExpr, index) => {
-      processedContent = processedContent.replace(`__MATH_DISPLAY_${index}__`, mathExpr);
-      processedContent = processedContent.replace(`__MATH_INLINE_${index}__`, mathExpr);
-    });
 
     return processedContent;
   };
@@ -217,76 +245,79 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   };
   
   return (
-    <>
-      {/* Load required CSS and JS if not already loaded */}
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-3`}>
       {!isUser && (
-        <>
-          <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css"
-            crossOrigin="anonymous"
-          />
-          <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
-          />
-          <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.js"
-            crossOrigin="anonymous"
-          />
-          <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min.js"
-            crossOrigin="anonymous"
-          />
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" />
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" />
-        </>
+        <img 
+          src="/lovable-uploads/63083a92-c115-4af0-86c6-164b93752c8c.png" 
+          alt="Sorachio" 
+          className="w-8 h-8 rounded-full flex-shrink-0"
+        />
       )}
-
-      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-3`}>
-        {!isUser && (
+      
+      <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
+        isUser 
+          ? 'bg-gray-900 text-white rounded-br-sm' 
+          : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+      }`}>
+        {message.image && (
           <img 
-            src="/lovable-uploads/63083a92-c115-4af0-86c6-164b93752c8c.png" 
-            alt="Sorachio" 
-            className="w-8 h-8 rounded-full flex-shrink-0"
+            src={message.image} 
+            alt="Uploaded image" 
+            className="max-w-full rounded-lg mb-2"
           />
         )}
         
-        <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
-          isUser 
-            ? 'bg-gray-900 text-white rounded-br-sm' 
-            : 'bg-gray-100 text-gray-900 rounded-bl-sm'
-        }`}>
-          {message.image && (
-            <img 
-              src={message.image} 
-              alt="Uploaded image" 
-              className="max-w-full rounded-lg mb-2"
-            />
-          )}
-          
-          {isUser ? (
-            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-          ) : (
-            <div
-              ref={contentRef}
-              className="text-sm message-content"
-              dangerouslySetInnerHTML={{ __html: processContent(message.content) }}
-            />
-          )}
-        </div>
-        
-        {isUser && (
-          <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
-            <User className="w-4 h-4 text-white" />
-          </div>
+        {isUser ? (
+          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+        ) : (
+          <div
+            ref={contentRef}
+            className="text-sm message-content"
+            dangerouslySetInnerHTML={{ __html: processContent(message.content) }}
+          />
         )}
       </div>
+      
+      {isUser && (
+        <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
+          <User className="w-4 h-4 text-white" />
+        </div>
+      )}
 
       <style>{`
         .message-content {
           line-height: 1.6;
           word-wrap: break-word;
+        }
+
+        /* Math styling */
+        .message-content .math-display {
+          display: block;
+          margin: 16px 0;
+          text-align: center;
+          overflow-x: auto;
+        }
+
+        .message-content .math-inline {
+          display: inline;
+        }
+
+        .message-content .katex {
+          font-size: 1.1em;
+        }
+
+        .message-content .katex-display {
+          margin: 16px 0;
+          text-align: center;
+          overflow-x: auto;
+        }
+
+        .message-content .katex-error {
+          color: #cc0000;
+          background: #ffebee;
+          padding: 2px 4px;
+          border-radius: 3px;
+          font-family: monospace;
         }
 
         /* Headers */
@@ -352,7 +383,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           margin: 16px 0;
         }
 
-        /* Links - Enhanced styling with hover effects */
+        /* Links */
         .message-content .markdown-link {
           color: #0066cc;
           text-decoration: underline;
@@ -419,17 +450,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
         }
 
-        /* Math expressions styling */
-        .message-content .katex {
-          font-size: 1.1em;
-        }
-
-        .message-content .katex-display {
-          margin: 12px 0;
-          text-align: center;
-        }
-
-        /* Dark theme support for user messages */
+        /* Dark theme support */
         .bg-gray-900 .katex {
           color: white;
         }
@@ -468,58 +489,13 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           .message-content .markdown-header {
             margin: 8px 0 6px 0;
           }
-        }
 
-        /* Enhanced Prism theme */
-        .message-content .token.comment,
-        .message-content .token.prolog,
-        .message-content .token.doctype,
-        .message-content .token.cdata {
-          color: #708090;
-        }
-
-        .message-content .token.punctuation {
-          color: #999;
-        }
-
-        .message-content .token.property,
-        .message-content .token.tag,
-        .message-content .token.boolean,
-        .message-content .token.number,
-        .message-content .token.constant,
-        .message-content .token.symbol,
-        .message-content .token.deleted {
-          color: #905;
-        }
-
-        .message-content .token.selector,
-        .message-content .token.attr-name,
-        .message-content .token.string,
-        .message-content .token.char,
-        .message-content .token.builtin,
-        .message-content .token.inserted {
-          color: #690;
-        }
-
-        .message-content .token.operator,
-        .message-content .token.entity,
-        .message-content .token.url,
-        .message-content .language-css .token.string,
-        .message-content .style .token.string {
-          color: #9a6e3a;
-        }
-
-        .message-content .token.atrule,
-        .message-content .token.attr-value,
-        .message-content .token.keyword {
-          color: #07a;
-        }
-
-        .message-content .token.function,
-        .message-content .token.class-name {
-          color: #dd4a68;
+          .message-content .katex-display {
+            font-size: 0.9em;
+            margin: 12px 0;
+          }
         }
       `}</style>
-    </>
+    </div>
   );
 };

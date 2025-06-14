@@ -207,7 +207,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       <div className={`
         px-4 py-3 rounded-lg relative transition-all duration-200 hover:shadow-md
         ${isUser 
-          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
+          ? 'bg-blue-500 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
           : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[85%] lg:max-w-[75%] border border-gray-200 dark:border-gray-700'
         }
       `}>
@@ -239,7 +239,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       </div>
       
       {isUser && (
-        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-blue-100">
+        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
           <User className="w-4 h-4 text-white" />
         </div>
       )}

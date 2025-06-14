@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface ChatInputProps {
@@ -13,16 +14,46 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [recordingProgress, setRecordingProgress] = useState(0);
+  const [showRecordingFeedback, setShowRecordingFeedback] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const { isListening, startListening, stopListening, transcript } = useSpeechRecognition();
 
   useEffect(() => {
     if (transcript) {
       setMessage(prev => prev + ' ' + transcript);
+      setShowRecordingFeedback(true);
+      setTimeout(() => setShowRecordingFeedback(false), 2000);
     }
   }, [transcript]);
+
+  // Recording progress animation
+  useEffect(() => {
+    if (isListening) {
+      setRecordingProgress(0);
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingProgress(prev => {
+          if (prev >= 100) return 0; // Reset when reaches 100
+          return prev + 2;
+        });
+      }, 100);
+    } else {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+      setRecordingProgress(0);
+    }
+
+    return () => {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    };
+  }, [isListening]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +95,31 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
 
   return (
     <div className="border-t border-border bg-background p-4">
+      {/* Recording Feedback */}
+      {isListening && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-red-700">Sedang merekam suara...</span>
+          </div>
+          <Progress value={recordingProgress} className="h-2" />
+          <p className="text-xs text-red-600 mt-1">Bicara dengan jelas, tekan lagi untuk berhenti</p>
+        </div>
+      )}
+
+      {/* Success Feedback */}
+      {showRecordingFeedback && transcript && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in">
+          <div className="flex items-center space-x-2">
+            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-sm font-medium text-green-700">Suara berhasil direkam!</span>
+          </div>
+          <p className="text-xs text-green-600 mt-1">"{transcript.substring(0, 50)}..."</p>
+        </div>
+      )}
+
       {imagePreview && (
         <div className="mb-4 relative inline-block">
           <img src={imagePreview} alt="Preview" className="max-w-32 max-h-32 rounded-lg" />
@@ -120,9 +176,21 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               variant="ghost"
               size="sm"
               onClick={toggleVoiceRecording}
-              className={`p-2 rounded-md ${isListening ? 'bg-destructive/10 hover:bg-destructive/20 text-destructive' : 'hover:bg-accent text-foreground'}`}
+              className={`p-2 rounded-md transition-all duration-200 ${
+                isListening 
+                  ? 'bg-red-100 hover:bg-red-200 text-red-600 animate-pulse' 
+                  : 'hover:bg-accent text-foreground hover:scale-105'
+              }`}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isListening ? 'text-destructive' : 'text-foreground'}>
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                className={`transition-all duration-200 ${isListening ? 'text-red-600 scale-110' : 'text-foreground'}`}
+              >
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                 <line x1="12" y1="19" x2="12" y2="23"/>

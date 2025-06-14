@@ -17,6 +17,16 @@
     <meta name="twitter:image" content="/lovable-uploads/63083a92-c115-4af0-86c6-164b93752c8c.png" />
     
     <link rel="icon" href="/lovable-uploads/63083a92-c115-4af0-86c6-164b93752c8c.png" type="image/png">
+    
+    <!-- Eruda Console for Mobile Debugging -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+      // Only load Eruda on mobile devices
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        eruda.init();
+        console.log('📱 Eruda mobile console initialized');
+      }
+    </script>
   </head>
 
   <body>

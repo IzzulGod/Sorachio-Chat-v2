@@ -35,24 +35,24 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
         // Load KaTeX script
         if (!window.katex) {
-          await new Promise((resolve, reject) => {
+          await new Promise<void>((resolve, reject) => {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
             script.crossOrigin = 'anonymous';
-            script.onload = resolve;
-            script.onerror = reject;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load KaTeX'));
             document.head.appendChild(script);
           });
         }
 
         // Load auto-render extension
         if (!window.renderMathInElement) {
-          await new Promise((resolve, reject) => {
+          await new Promise<void>((resolve, reject) => {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
             script.crossOrigin = 'anonymous';
-            script.onload = resolve;
-            script.onerror = reject;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load auto-render'));
             document.head.appendChild(script);
           });
         }
@@ -85,7 +85,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
             throwOnError: false,
             errorColor: '#cc0000',
             strict: false,
-            trust: (context) => ['\\htmlId', '\\href'].includes(context.command),
+            trust: (context: any) => ['\\htmlId', '\\href'].includes(context.command),
             macros: {
               '\\RR': '\\mathbb{R}',
               '\\NN': '\\mathbb{N}',

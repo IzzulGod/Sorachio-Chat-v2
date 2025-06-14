@@ -1,9 +1,8 @@
-
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 
 interface ChatInputProps {
   onSendMessage: (content: string, image?: File) => void;
@@ -18,48 +17,43 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [showRecordingFeedback, setShowRecordingFeedback] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const { isListening, startListening, stopListening, transcript } = useSpeechRecognition();
 
   useEffect(() => {
     if (transcript) {
-      setMessage(prev => prev + ' ' + transcript);
+      setMessage(transcript);
       setShowRecordingFeedback(true);
-      setTimeout(() => setShowRecordingFeedback(false), 2000);
+      setTimeout(() => setShowRecordingFeedback(false), 3000);
     }
   }, [transcript]);
 
-  // Recording progress animation
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
     if (isListening) {
       setRecordingProgress(0);
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingProgress(prev => {
-          if (prev >= 100) return 0; // Reset when reaches 100
-          return prev + 2;
+      intervalId = setInterval(() => {
+        setRecordingProgress((prevProgress) => {
+          if (prevProgress >= 100) {
+            clearInterval(intervalId);
+            return 100;
+          }
+          return prevProgress + 10;
         });
-      }, 100);
+      }, 300);
     } else {
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-        recordingIntervalRef.current = null;
-      }
+      clearInterval(intervalId);
       setRecordingProgress(0);
     }
 
-    return () => {
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-      }
-    };
+    return () => clearInterval(intervalId);
   }, [isListening]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() && !selectedImage) return;
     
-    onSendMessage(message, selectedImage || undefined);
+    onSendMessage(message.trim(), selectedImage || undefined);
     setMessage('');
     setSelectedImage(null);
     setImagePreview(null);
@@ -70,8 +64,8 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
     if (file) {
       setSelectedImage(file);
       const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result as string);
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -100,10 +94,10 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-red-700">Sedang merekam suara...</span>
+            <span className="text-sm font-medium text-red-700">Recording voice...</span>
           </div>
           <Progress value={recordingProgress} className="h-2" />
-          <p className="text-xs text-red-600 mt-1">Bicara dengan jelas, tekan lagi untuk berhenti</p>
+          <p className="text-xs text-red-600 mt-1">Speak clearly, press again to stop</p>
         </div>
       )}
 
@@ -114,69 +108,56 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span className="text-sm font-medium text-green-700">Suara berhasil direkam!</span>
+            <span className="text-sm font-medium text-green-700">Voice recorded successfully!</span>
           </div>
           <p className="text-xs text-green-600 mt-1">"{transcript.substring(0, 50)}..."</p>
         </div>
       )}
 
+      {/* Image Preview */}
       {imagePreview && (
-        <div className="mb-4 relative inline-block">
-          <img src={imagePreview} alt="Preview" className="max-w-32 max-h-32 rounded-lg" />
-          <button
+        <div className="relative mb-4">
+          <img src={imagePreview} alt="Image Preview" className="rounded-lg max-h-64 w-full object-contain" />
+          <Button
+            type="button"
             onClick={removeImage}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs hover:bg-destructive/90"
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 bg-background/80 hover:bg-background text-foreground hover:text-destructive rounded-full shadow-md"
           >
-            ×
-          </button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            <span className="sr-only">Remove image</span>
+          </Button>
         </div>
       )}
-      
-      <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-        <div className="flex-1 relative">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Ketik pesan ke Sorachio..."
-            className="min-h-[44px] max-h-32 resize-none border-input rounded-xl pr-20 focus:ring-1 focus:ring-ring focus:border-ring bg-background text-foreground placeholder:text-muted-foreground"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
-          />
-          
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageSelect}
-              className="hidden"
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-end space-x-2">
+          <div className="flex-1 relative">
+            <Textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type your message here..."
+              className="min-h-[60px] max-h-[200px] resize-none pr-12"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
             />
             
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 hover:bg-accent rounded-md"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <circle cx="9" cy="9" r="2"/>
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-              </svg>
-            </Button>
-            
+            {/* Voice recording button inside textarea */}
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={toggleVoiceRecording}
-              className={`p-2 rounded-md transition-all duration-200 ${
+              className={`absolute right-2 bottom-2 p-2 rounded-md transition-all duration-200 ${
                 isListening 
                   ? 'bg-red-100 hover:bg-red-200 text-red-600 animate-pulse' 
                   : 'hover:bg-accent text-foreground hover:scale-105'
@@ -198,18 +179,39 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               </svg>
             </Button>
           </div>
+          
+          {/* Image upload button */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2 hover:bg-accent text-foreground"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+              <circle cx="9" cy="9" r="2"/>
+              <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+            </svg>
+          </Button>
+          
+          {/* Send button */}
+          <Button
+            type="submit"
+            disabled={isLoading || (!message.trim() && !selectedImage)}
+            className="px-6"
+          >
+            {isLoading ? 'Sending...' : 'Send'}
+          </Button>
         </div>
         
-        <Button
-          type="submit"
-          disabled={(!message.trim() && !selectedImage) || isLoading}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-4 py-2 h-12 w-12 flex items-center justify-center"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22,2 15,22 11,13 2,9 22,2"/>
-          </svg>
-        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          className="hidden"
+        />
       </form>
     </div>
   );

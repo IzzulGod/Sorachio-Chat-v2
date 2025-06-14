@@ -15,16 +15,14 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   // Enhanced logging for mobile debugging
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
-    console.log('🔍 MessageBubble Mobile Debug:', {
+    console.log('🔍 MessageBubble Debug:', {
       role: message.role,
       contentLength: message.content?.length || 0,
       contentPreview: message.content?.substring(0, 100),
       hasImage: !!message.image,
       isMobile,
-      userAgent: navigator.userAgent,
       windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
-      devicePixelRatio: window.devicePixelRatio
+      windowHeight: window.innerHeight
     });
     
     if (!isUser && message.content) {
@@ -112,27 +110,26 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     setTimeout(renderMath, 100);
   }, [katexReady, message.content, isUser]);
 
-  // Simple content processing
+  // Balanced content processing for both desktop and mobile
   const processContent = (content: string) => {
     const isMobile = window.innerWidth <= 768;
-    console.log('🔄 Processing content for mobile:', {
+    console.log('🔄 Processing content:', {
       originalLength: content.length,
-      contentPreview: content.substring(0, 200),
+      contentPreview: content.substring(0, 100),
       isMobile,
       hasCodeBlocks: content.includes('```')
     });
     
     let processed = content;
 
-    // Process code blocks with very simple mobile-first approach
+    // Process code blocks with responsive styles
     processed = processed.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'plaintext';
       const cleanCode = code.trim();
       console.log('📦 Processing code block:', { 
         language, 
         codeLength: cleanCode.length, 
-        isMobile,
-        preview: cleanCode.substring(0, 50)
+        isMobile
       });
       
       const escapedCode = cleanCode
@@ -141,59 +138,60 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      // Mobile-optimized code block with inline styles
-      const fontSize = isMobile ? '12px' : '14px';
-      const padding = isMobile ? '8px' : '12px';
-      const margin = isMobile ? '8px 0' : '12px 0';
-      
+      // Responsive design with CSS classes + inline styles for reliability
       const result = `
-        <div style="
-          margin: ${margin}; 
+        <div class="code-block-container" style="
+          margin: 12px 0; 
           border-radius: 6px; 
           overflow: hidden; 
           background: #f8f9fa; 
           border: 1px solid #e9ecef; 
-          font-family: 'SF Mono', Monaco, Consolas, monospace;
+          font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
           width: 100%;
-          max-width: 100%;
           box-sizing: border-box;
         ">
-          <div style="
-            padding: 6px 12px; 
+          <div class="code-header" style="
+            padding: 8px 12px; 
             background: #e9ecef; 
             border-bottom: 1px solid #dee2e6; 
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             color: #6c757d;
+            letter-spacing: 0.5px;
           ">${language}</div>
-          <pre style="
-            padding: ${padding}; 
-            margin: 0; 
-            overflow-x: auto; 
-            background: #fff; 
-            color: #24292e; 
-            font-size: ${fontSize}; 
-            line-height: 1.4;
-            white-space: pre;
-            word-wrap: break-word;
+          <div class="code-content" style="
+            background: #fff;
+            overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             width: 100%;
             box-sizing: border-box;
-          "><code style="
-            background: none; 
-            padding: 0; 
-            border-radius: 0; 
-            font-family: inherit; 
-            font-size: inherit; 
-            color: inherit;
-            white-space: pre;
-            word-wrap: break-word;
-          ">${escapedCode}</code></pre>
+          ">
+            <pre style="
+              padding: ${isMobile ? '10px' : '12px'}; 
+              margin: 0; 
+              background: #fff; 
+              color: #24292e; 
+              font-size: ${isMobile ? '13px' : '14px'}; 
+              line-height: 1.5;
+              white-space: pre;
+              overflow-x: auto;
+              -webkit-overflow-scrolling: touch;
+              font-family: inherit;
+            "><code style="
+              background: none; 
+              padding: 0; 
+              border-radius: 0; 
+              font-family: inherit; 
+              font-size: inherit; 
+              color: inherit;
+              white-space: pre;
+            ">${escapedCode}</code></pre>
+          </div>
         </div>
       `;
       
-      console.log('✅ Code block processed for mobile');
+      console.log('✅ Code block processed');
       return result;
     });
 
@@ -204,17 +202,17 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     // Headers
     processed = processed.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
       const level = hashes.length;
-      const fontSize = isMobile ? '1.2em' : '1.4em';
-      return `<h${level} style="font-size: ${fontSize}; font-weight: bold; margin: 12px 0 6px 0;">${text.trim()}</h${level}>`;
+      const fontSize = level === 1 ? '1.5em' : level === 2 ? '1.3em' : '1.1em';
+      return `<h${level} style="font-size: ${fontSize}; font-weight: bold; margin: 16px 0 8px 0; color: #1a202c;">${text.trim()}</h${level}>`;
     });
 
     // Bold and italic
-    processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600;">$1</strong>');
+    processed = processed.replace(/\*(.*?)\*/g, '<em style="font-style: italic;">$1</em>');
 
     // Lists
-    processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li style="margin: 4px 0;">$1</li>');
-    processed = processed.replace(/(<li.*?>.*<\/li>)/gs, '<ul style="padding-left: 16px; margin: 8px 0;">$1</ul>');
+    processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li style="margin: 4px 0; padding-left: 4px;">$1</li>');
+    processed = processed.replace(/(<li.*?>.*<\/li>)/gs, '<ul style="padding-left: 20px; margin: 8px 0; list-style-type: disc;">$1</ul>');
 
     // Links
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
@@ -262,7 +260,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         ) : (
           <div
             ref={contentRef}
-            className="text-sm break-words"
+            className="text-sm break-words prose prose-sm max-w-none"
             style={{ 
               wordWrap: 'break-word', 
               overflowWrap: 'break-word',

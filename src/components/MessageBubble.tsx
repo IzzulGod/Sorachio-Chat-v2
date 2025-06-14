@@ -2,6 +2,7 @@ import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { MessageStatus } from '@/components/MessageStatus';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface MessageBubbleProps {
   message: Message;
@@ -12,6 +13,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [katexReady, setKatexReady] = useState(false);
   const [messageStatus, setMessageStatus] = useState<'sending' | 'sent' | 'error'>('sent');
+  const [showFullImage, setShowFullImage] = useState(false);
   
   // Enhanced logging for mobile debugging
   useEffect(() => {
@@ -184,6 +186,14 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     return processed;
   };
   
+  const handleImageClick = () => {
+    setShowFullImage(true);
+  };
+
+  const handleCloseFullImage = () => {
+    setShowFullImage(false);
+  };
+  
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-3 w-full animate-fade-in`}>
       {!isUser && (
@@ -202,11 +212,16 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         }
       `}>
         {message.image && (
-          <img 
-            src={message.image} 
-            alt="Uploaded image" 
-            className="max-w-full rounded-lg mb-2 shadow-sm"
-          />
+          <div className="mb-2">
+            <AspectRatio ratio={16 / 9} className="w-full max-w-sm">
+              <img 
+                src={message.image} 
+                alt="Uploaded image" 
+                className="w-full h-full object-cover rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={handleImageClick}
+              />
+            </AspectRatio>
+          </div>
         )}
         
         {isUser ? (
@@ -226,6 +241,29 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       {isUser && (
         <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-blue-100">
           <User className="w-4 h-4 text-white" />
+        </div>
+      )}
+
+      {/* Full Image Modal */}
+      {showFullImage && message.image && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4" onClick={handleCloseFullImage}>
+          <div className="relative max-w-full max-h-full">
+            <img 
+              src={message.image} 
+              alt="Full size image" 
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={handleCloseFullImage}
+              className="absolute top-4 right-4 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-70 transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
     </div>

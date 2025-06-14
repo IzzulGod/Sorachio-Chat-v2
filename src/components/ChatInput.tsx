@@ -161,7 +161,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             <AutoResizeTextarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Ketik pesan kamu di sini... ✨"
+              placeholder="Type your message here..."
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

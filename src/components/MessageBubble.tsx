@@ -84,27 +84,30 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const processContent = (content: string) => {
     let processed = content;
 
-    // Code blocks with language detection
+    // Code blocks with language detection - improved regex
     processed = processed.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'text';
-      return `<div class="code-block-container">
+      const escapedCode = escapeHtml(code.trim());
+      const codeForCopy = code.trim().replace(/'/g, "\\'").replace(/"/g, '\\"');
+      
+      return `<div class="code-block-container mb-4">
         <div class="code-block-header">
           <span class="code-language">${language}</span>
-          <button class="copy-btn" onclick="navigator.clipboard.writeText('${escapeHtml(code.trim()).replace(/'/g, "\\'")}')">Copy</button>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('${codeForCopy}').then(() => { this.textContent = 'Copied!'; setTimeout(() => this.textContent = 'Copy', 2000); })">Copy</button>
         </div>
-        <pre class="code-block" data-language="${language}"><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>
+        <pre class="code-block"><code class="language-${language}">${escapedCode}</code></pre>
       </div>`;
     });
 
-    // Inline code
-    processed = processed.replace(/`([^`\n]+)`/g, (match, code) => {
+    // Inline code - improved to avoid conflicts
+    processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, (match, code) => {
       return `<code class="inline-code">${escapeHtml(code)}</code>`;
     });
 
     // Headers
     processed = processed.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
       const level = hashes.length;
-      return `<h${level} class="header-${level}">${text.trim()}</h${level}>`;
+      return `<h${level} class="header-${level} mb-2 mt-4">${text.trim()}</h${level}>`;
     });
 
     // Bold
@@ -115,7 +118,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
     // Lists
     processed = processed.replace(/^[\-\*]\s+(.+)$/gm, '<li class="list-item">$1</li>');
-    processed = processed.replace(/(<li class="list-item">.*?<\/li>)/gs, '<ul class="list">$1</ul>');
+    processed = processed.replace(/(<li class="list-item">.*?<\/li>)/gs, '<ul class="list mb-2">$1</ul>');
 
     // Links
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
@@ -175,7 +178,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         </div>
       )}
 
-      <style>{`
+      <style jsx>{`
         .message-content {
           line-height: 1.6;
           word-wrap: break-word;
@@ -200,14 +203,26 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         }
 
         /* Headers */
-        .message-content .header-1 { font-size: 1.4em; font-weight: bold; margin: 12px 0 8px 0; color: #1a1a1a; }
-        .message-content .header-2 { font-size: 1.25em; font-weight: bold; margin: 12px 0 8px 0; color: #1a1a1a; }
-        .message-content .header-3 { font-size: 1.15em; font-weight: bold; margin: 12px 0 8px 0; color: #1a1a1a; }
+        .message-content .header-1 { 
+          font-size: 1.4em; 
+          font-weight: bold; 
+          color: #1a1a1a; 
+        }
+        .message-content .header-2 { 
+          font-size: 1.25em; 
+          font-weight: bold; 
+          color: #1a1a1a; 
+        }
+        .message-content .header-3 { 
+          font-size: 1.15em; 
+          font-weight: bold; 
+          color: #1a1a1a; 
+        }
 
         /* Dark mode headers */
-        .dark .message-content .header-1,
-        .dark .message-content .header-2,
-        .dark .message-content .header-3 { 
+        :global(.dark) .message-content .header-1,
+        :global(.dark) .message-content .header-2,
+        :global(.dark) .message-content .header-3 { 
           color: #e5e5e5; 
         }
 
@@ -217,7 +232,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
         /* Lists */
         .message-content .list {
-          margin: 8px 0;
           padding-left: 20px;
           list-style-type: disc;
         }
@@ -236,19 +250,24 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         }
 
         /* Dark mode links */
-        .dark .message-content .link {
+        :global(.dark) .message-content .link {
           color: #60a5fa;
         }
-        .dark .message-content .link:hover {
+        :global(.dark) .message-content .link:hover {
           color: #93c5fd;
         }
 
         /* Code blocks container */
         .message-content .code-block-container {
-          margin: 12px 0;
           border-radius: 8px;
           overflow: hidden;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          background: #f8f9fa;
+        }
+
+        :global(.dark) .message-content .code-block-container {
+          background: #1e293b;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
         /* Code block header */
@@ -256,15 +275,15 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: #f8f9fa;
+          background: #e5e7eb;
           padding: 8px 12px;
-          border-bottom: 1px solid #e9ecef;
+          border-bottom: 1px solid #d1d5db;
           font-size: 12px;
         }
 
-        .dark .message-content .code-block-header {
-          background: #2d3748;
-          border-bottom-color: #4a5568;
+        :global(.dark) .message-content .code-block-header {
+          background: #334155;
+          border-bottom-color: #475569;
           color: #e2e8f0;
         }
 
@@ -272,33 +291,38 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           font-weight: 600;
           text-transform: uppercase;
           color: #6b7280;
+          font-size: 11px;
         }
 
-        .dark .message-content .code-language {
-          color: #9ca3af;
+        :global(.dark) .message-content .code-language {
+          color: #94a3b8;
         }
 
         .message-content .copy-btn {
-          background: #e5e7eb;
-          border: none;
+          background: #ffffff;
+          border: 1px solid #d1d5db;
           padding: 4px 8px;
           border-radius: 4px;
           cursor: pointer;
           font-size: 11px;
-          transition: background-color 0.2s;
+          transition: all 0.2s;
+          color: #374151;
         }
 
         .message-content .copy-btn:hover {
-          background: #d1d5db;
+          background: #f3f4f6;
+          border-color: #9ca3af;
         }
 
-        .dark .message-content .copy-btn {
-          background: #4a5568;
+        :global(.dark) .message-content .copy-btn {
+          background: #475569;
           color: #e2e8f0;
+          border-color: #64748b;
         }
 
-        .dark .message-content .copy-btn:hover {
-          background: #2d3748;
+        :global(.dark) .message-content .copy-btn:hover {
+          background: #64748b;
+          border-color: #94a3b8;
         }
 
         /* Code blocks */
@@ -307,14 +331,15 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           padding: 16px;
           margin: 0;
           overflow-x: auto;
-          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
           font-size: 14px;
           line-height: 1.5;
           border: none;
+          color: #24292e;
         }
 
-        .dark .message-content .code-block {
-          background: #1a202c;
+        :global(.dark) .message-content .code-block {
+          background: #0f172a;
           color: #e2e8f0;
         }
 
@@ -366,49 +391,49 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         }
 
         /* Syntax highlighting for dark mode */
-        .dark .message-content .code-block .token.comment,
-        .dark .message-content .code-block .token.prolog,
-        .dark .message-content .code-block .token.doctype,
-        .dark .message-content .code-block .token.cdata {
+        :global(.dark) .message-content .code-block .token.comment,
+        :global(.dark) .message-content .code-block .token.prolog,
+        :global(.dark) .message-content .code-block .token.doctype,
+        :global(.dark) .message-content .code-block .token.cdata {
           color: #8b949e;
           font-style: italic;
         }
 
-        .dark .message-content .code-block .token.punctuation {
+        :global(.dark) .message-content .code-block .token.punctuation {
           color: #c9d1d9;
         }
 
-        .dark .message-content .code-block .token.property,
-        .dark .message-content .code-block .token.tag,
-        .dark .message-content .code-block .token.boolean,
-        .dark .message-content .code-block .token.number,
-        .dark .message-content .code-block .token.constant,
-        .dark .message-content .code-block .token.symbol {
+        :global(.dark) .message-content .code-block .token.property,
+        :global(.dark) .message-content .code-block .token.tag,
+        :global(.dark) .message-content .code-block .token.boolean,
+        :global(.dark) .message-content .code-block .token.number,
+        :global(.dark) .message-content .code-block .token.constant,
+        :global(.dark) .message-content .code-block .token.symbol {
           color: #79c0ff;
         }
 
-        .dark .message-content .code-block .token.selector,
-        .dark .message-content .code-block .token.attr-name,
-        .dark .message-content .code-block .token.string,
-        .dark .message-content .code-block .token.char,
-        .dark .message-content .code-block .token.builtin {
+        :global(.dark) .message-content .code-block .token.selector,
+        :global(.dark) .message-content .code-block .token.attr-name,
+        :global(.dark) .message-content .code-block .token.string,
+        :global(.dark) .message-content .code-block .token.char,
+        :global(.dark) .message-content .code-block .token.builtin {
           color: #a5d6ff;
         }
 
-        .dark .message-content .code-block .token.operator,
-        .dark .message-content .code-block .token.entity,
-        .dark .message-content .code-block .token.url {
+        :global(.dark) .message-content .code-block .token.operator,
+        :global(.dark) .message-content .code-block .token.entity,
+        :global(.dark) .message-content .code-block .token.url {
           color: #ff7b72;
         }
 
-        .dark .message-content .code-block .token.atrule,
-        .dark .message-content .code-block .token.attr-value,
-        .dark .message-content .code-block .token.keyword {
+        :global(.dark) .message-content .code-block .token.atrule,
+        :global(.dark) .message-content .code-block .token.attr-value,
+        :global(.dark) .message-content .code-block .token.keyword {
           color: #ff7b72;
         }
 
-        .dark .message-content .code-block .token.function,
-        .dark .message-content .code-block .token.class-name {
+        :global(.dark) .message-content .code-block .token.function,
+        :global(.dark) .message-content .code-block .token.class-name {
           color: #d2a8ff;
         }
 
@@ -417,13 +442,13 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           background: #f3f4f6;
           padding: 2px 6px;
           border-radius: 4px;
-          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
           font-size: 0.9em;
           color: #e11d48;
           font-weight: 500;
         }
 
-        .dark .message-content .inline-code {
+        :global(.dark) .message-content .inline-code {
           background: #374151;
           color: #fbbf24;
         }
@@ -446,25 +471,25 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
         /* Scrollbar for code blocks */
         .message-content .code-block::-webkit-scrollbar {
-          height: 6px;
+          height: 8px;
         }
 
         .message-content .code-block::-webkit-scrollbar-track {
           background: #f1f3f4;
-          border-radius: 3px;
+          border-radius: 4px;
         }
 
         .message-content .code-block::-webkit-scrollbar-thumb {
           background: #dadce0;
-          border-radius: 3px;
+          border-radius: 4px;
         }
 
-        .dark .message-content .code-block::-webkit-scrollbar-track {
-          background: #2d3748;
+        :global(.dark) .message-content .code-block::-webkit-scrollbar-track {
+          background: #1e293b;
         }
 
-        .dark .message-content .code-block::-webkit-scrollbar-thumb {
-          background: #4a5568;
+        :global(.dark) .message-content .code-block::-webkit-scrollbar-thumb {
+          background: #475569;
         }
       `}</style>
     </div>

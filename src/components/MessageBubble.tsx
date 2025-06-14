@@ -84,22 +84,22 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const processContent = (content: string) => {
     let processed = content;
 
-    // Code blocks with language detection - improved regex
+    // Code blocks with language detection
     processed = processed.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'text';
       const escapedCode = escapeHtml(code.trim());
-      const codeForCopy = code.trim().replace(/'/g, "\\'").replace(/"/g, '\\"');
+      const codeForCopy = code.trim().replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
       
       return `<div class="code-block-container mb-4">
         <div class="code-block-header">
           <span class="code-language">${language}</span>
-          <button class="copy-btn" onclick="navigator.clipboard.writeText('${codeForCopy}').then(() => { this.textContent = 'Copied!'; setTimeout(() => this.textContent = 'Copy', 2000); })">Copy</button>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('${codeForCopy}').then(() => { this.textContent = 'Copied!'; setTimeout(() => this.textContent = 'Copy', 2000); }).catch(() => { this.textContent = 'Failed'; setTimeout(() => this.textContent = 'Copy', 2000); })">Copy</button>
         </div>
         <pre class="code-block"><code class="language-${language}">${escapedCode}</code></pre>
       </div>`;
     });
 
-    // Inline code - improved to avoid conflicts
+    // Inline code
     processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, (match, code) => {
       return `<code class="inline-code">${escapeHtml(code)}</code>`;
     });
@@ -135,6 +135,204 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     div.textContent = text;
     return div.innerHTML;
   };
+
+  // CSS styles as string
+  const styles = `
+    .message-content {
+      line-height: 1.6;
+      word-wrap: break-word;
+    }
+
+    .message-content .katex {
+      font-size: 1.1em;
+    }
+
+    .message-content .katex-display {
+      margin: 16px 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+
+    .message-content .katex-error {
+      color: #cc0000;
+      background: #ffebee;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    .message-content .header-1 { 
+      font-size: 1.4em; 
+      font-weight: bold; 
+      color: #1a1a1a; 
+    }
+    .message-content .header-2 { 
+      font-size: 1.25em; 
+      font-weight: bold; 
+      color: #1a1a1a; 
+    }
+    .message-content .header-3 { 
+      font-size: 1.15em; 
+      font-weight: bold; 
+      color: #1a1a1a; 
+    }
+
+    .dark .message-content .header-1,
+    .dark .message-content .header-2,
+    .dark .message-content .header-3 { 
+      color: #e5e5e5; 
+    }
+
+    .message-content strong { font-weight: bold; }
+    .message-content em { font-style: italic; }
+
+    .message-content .list {
+      padding-left: 20px;
+      list-style-type: disc;
+    }
+    .message-content .list-item {
+      margin: 4px 0;
+    }
+
+    .message-content .link {
+      color: #2563eb;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+    .message-content .link:hover {
+      color: #1d4ed8;
+    }
+
+    .dark .message-content .link {
+      color: #60a5fa;
+    }
+    .dark .message-content .link:hover {
+      color: #93c5fd;
+    }
+
+    .message-content .code-block-container {
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: #f8f9fa;
+    }
+
+    .dark .message-content .code-block-container {
+      background: #1e293b;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .message-content .code-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #e5e7eb;
+      padding: 8px 12px;
+      border-bottom: 1px solid #d1d5db;
+      font-size: 12px;
+    }
+
+    .dark .message-content .code-block-header {
+      background: #334155;
+      border-bottom-color: #475569;
+      color: #e2e8f0;
+    }
+
+    .message-content .code-language {
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #6b7280;
+      font-size: 11px;
+    }
+
+    .dark .message-content .code-language {
+      color: #94a3b8;
+    }
+
+    .message-content .copy-btn {
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.2s;
+      color: #374151;
+    }
+
+    .message-content .copy-btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+
+    .dark .message-content .copy-btn {
+      background: #475569;
+      color: #e2e8f0;
+      border-color: #64748b;
+    }
+
+    .dark .message-content .copy-btn:hover {
+      background: #64748b;
+      border-color: #94a3b8;
+    }
+
+    .message-content .code-block {
+      background: #ffffff;
+      padding: 16px;
+      margin: 0;
+      overflow-x: auto;
+      font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      border: none;
+      color: #24292e;
+    }
+
+    .dark .message-content .code-block {
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .message-content .inline-code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #e11d48;
+      font-weight: 500;
+    }
+
+    .dark .message-content .inline-code {
+      background: #374151;
+      color: #fbbf24;
+    }
+
+    @media (max-width: 640px) {
+      .message-content .code-block {
+        font-size: 13px;
+        padding: 12px;
+      }
+      
+      .message-content .code-block-header {
+        padding: 6px 10px;
+      }
+      
+      .message-content .header-1 { font-size: 1.25em; }
+      .message-content .header-2 { font-size: 1.15em; }
+      .message-content .header-3 { font-size: 1.1em; }
+    }
+  `;
+
+  // Inject styles once
+  useEffect(() => {
+    const styleId = 'message-bubble-styles';
+    if (!document.getElementById(styleId)) {
+      const styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      styleElement.textContent = styles;
+      document.head.appendChild(styleElement);
+    }
+  }, []);
   
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-3 w-full`}>
@@ -177,321 +375,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           <User className="w-4 h-4 text-white" />
         </div>
       )}
-
-      <style jsx>{`
-        .message-content {
-          line-height: 1.6;
-          word-wrap: break-word;
-        }
-
-        /* Math styling */
-        .message-content .katex {
-          font-size: 1.1em;
-        }
-
-        .message-content .katex-display {
-          margin: 16px 0;
-          text-align: center;
-          overflow-x: auto;
-        }
-
-        .message-content .katex-error {
-          color: #cc0000;
-          background: #ffebee;
-          padding: 2px 4px;
-          border-radius: 3px;
-        }
-
-        /* Headers */
-        .message-content .header-1 { 
-          font-size: 1.4em; 
-          font-weight: bold; 
-          color: #1a1a1a; 
-        }
-        .message-content .header-2 { 
-          font-size: 1.25em; 
-          font-weight: bold; 
-          color: #1a1a1a; 
-        }
-        .message-content .header-3 { 
-          font-size: 1.15em; 
-          font-weight: bold; 
-          color: #1a1a1a; 
-        }
-
-        /* Dark mode headers */
-        :global(.dark) .message-content .header-1,
-        :global(.dark) .message-content .header-2,
-        :global(.dark) .message-content .header-3 { 
-          color: #e5e5e5; 
-        }
-
-        /* Text formatting */
-        .message-content strong { font-weight: bold; }
-        .message-content em { font-style: italic; }
-
-        /* Lists */
-        .message-content .list {
-          padding-left: 20px;
-          list-style-type: disc;
-        }
-        .message-content .list-item {
-          margin: 4px 0;
-        }
-
-        /* Links */
-        .message-content .link {
-          color: #2563eb;
-          text-decoration: underline;
-          transition: color 0.2s;
-        }
-        .message-content .link:hover {
-          color: #1d4ed8;
-        }
-
-        /* Dark mode links */
-        :global(.dark) .message-content .link {
-          color: #60a5fa;
-        }
-        :global(.dark) .message-content .link:hover {
-          color: #93c5fd;
-        }
-
-        /* Code blocks container */
-        .message-content .code-block-container {
-          border-radius: 8px;
-          overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          background: #f8f9fa;
-        }
-
-        :global(.dark) .message-content .code-block-container {
-          background: #1e293b;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-
-        /* Code block header */
-        .message-content .code-block-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #e5e7eb;
-          padding: 8px 12px;
-          border-bottom: 1px solid #d1d5db;
-          font-size: 12px;
-        }
-
-        :global(.dark) .message-content .code-block-header {
-          background: #334155;
-          border-bottom-color: #475569;
-          color: #e2e8f0;
-        }
-
-        .message-content .code-language {
-          font-weight: 600;
-          text-transform: uppercase;
-          color: #6b7280;
-          font-size: 11px;
-        }
-
-        :global(.dark) .message-content .code-language {
-          color: #94a3b8;
-        }
-
-        .message-content .copy-btn {
-          background: #ffffff;
-          border: 1px solid #d1d5db;
-          padding: 4px 8px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 11px;
-          transition: all 0.2s;
-          color: #374151;
-        }
-
-        .message-content .copy-btn:hover {
-          background: #f3f4f6;
-          border-color: #9ca3af;
-        }
-
-        :global(.dark) .message-content .copy-btn {
-          background: #475569;
-          color: #e2e8f0;
-          border-color: #64748b;
-        }
-
-        :global(.dark) .message-content .copy-btn:hover {
-          background: #64748b;
-          border-color: #94a3b8;
-        }
-
-        /* Code blocks */
-        .message-content .code-block {
-          background: #ffffff;
-          padding: 16px;
-          margin: 0;
-          overflow-x: auto;
-          font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-          font-size: 14px;
-          line-height: 1.5;
-          border: none;
-          color: #24292e;
-        }
-
-        :global(.dark) .message-content .code-block {
-          background: #0f172a;
-          color: #e2e8f0;
-        }
-
-        /* Syntax highlighting for light mode */
-        .message-content .code-block .token.comment,
-        .message-content .code-block .token.prolog,
-        .message-content .code-block .token.doctype,
-        .message-content .code-block .token.cdata {
-          color: #6a737d;
-          font-style: italic;
-        }
-
-        .message-content .code-block .token.punctuation {
-          color: #586069;
-        }
-
-        .message-content .code-block .token.property,
-        .message-content .code-block .token.tag,
-        .message-content .code-block .token.boolean,
-        .message-content .code-block .token.number,
-        .message-content .code-block .token.constant,
-        .message-content .code-block .token.symbol {
-          color: #005cc5;
-        }
-
-        .message-content .code-block .token.selector,
-        .message-content .code-block .token.attr-name,
-        .message-content .code-block .token.string,
-        .message-content .code-block .token.char,
-        .message-content .code-block .token.builtin {
-          color: #032f62;
-        }
-
-        .message-content .code-block .token.operator,
-        .message-content .code-block .token.entity,
-        .message-content .code-block .token.url {
-          color: #d73a49;
-        }
-
-        .message-content .code-block .token.atrule,
-        .message-content .code-block .token.attr-value,
-        .message-content .code-block .token.keyword {
-          color: #d73a49;
-        }
-
-        .message-content .code-block .token.function,
-        .message-content .code-block .token.class-name {
-          color: #6f42c1;
-        }
-
-        /* Syntax highlighting for dark mode */
-        :global(.dark) .message-content .code-block .token.comment,
-        :global(.dark) .message-content .code-block .token.prolog,
-        :global(.dark) .message-content .code-block .token.doctype,
-        :global(.dark) .message-content .code-block .token.cdata {
-          color: #8b949e;
-          font-style: italic;
-        }
-
-        :global(.dark) .message-content .code-block .token.punctuation {
-          color: #c9d1d9;
-        }
-
-        :global(.dark) .message-content .code-block .token.property,
-        :global(.dark) .message-content .code-block .token.tag,
-        :global(.dark) .message-content .code-block .token.boolean,
-        :global(.dark) .message-content .code-block .token.number,
-        :global(.dark) .message-content .code-block .token.constant,
-        :global(.dark) .message-content .code-block .token.symbol {
-          color: #79c0ff;
-        }
-
-        :global(.dark) .message-content .code-block .token.selector,
-        :global(.dark) .message-content .code-block .token.attr-name,
-        :global(.dark) .message-content .code-block .token.string,
-        :global(.dark) .message-content .code-block .token.char,
-        :global(.dark) .message-content .code-block .token.builtin {
-          color: #a5d6ff;
-        }
-
-        :global(.dark) .message-content .code-block .token.operator,
-        :global(.dark) .message-content .code-block .token.entity,
-        :global(.dark) .message-content .code-block .token.url {
-          color: #ff7b72;
-        }
-
-        :global(.dark) .message-content .code-block .token.atrule,
-        :global(.dark) .message-content .code-block .token.attr-value,
-        :global(.dark) .message-content .code-block .token.keyword {
-          color: #ff7b72;
-        }
-
-        :global(.dark) .message-content .code-block .token.function,
-        :global(.dark) .message-content .code-block .token.class-name {
-          color: #d2a8ff;
-        }
-
-        /* Inline code */
-        .message-content .inline-code {
-          background: #f3f4f6;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-          font-size: 0.9em;
-          color: #e11d48;
-          font-weight: 500;
-        }
-
-        :global(.dark) .message-content .inline-code {
-          background: #374151;
-          color: #fbbf24;
-        }
-
-        /* Mobile responsive adjustments */
-        @media (max-width: 640px) {
-          .message-content .code-block {
-            font-size: 13px;
-            padding: 12px;
-          }
-          
-          .message-content .code-block-header {
-            padding: 6px 10px;
-          }
-          
-          .message-content .header-1 { font-size: 1.25em; }
-          .message-content .header-2 { font-size: 1.15em; }
-          .message-content .header-3 { font-size: 1.1em; }
-        }
-
-        /* Scrollbar for code blocks */
-        .message-content .code-block::-webkit-scrollbar {
-          height: 8px;
-        }
-
-        .message-content .code-block::-webkit-scrollbar-track {
-          background: #f1f3f4;
-          border-radius: 4px;
-        }
-
-        .message-content .code-block::-webkit-scrollbar-thumb {
-          background: #dadce0;
-          border-radius: 4px;
-        }
-
-        :global(.dark) .message-content .code-block::-webkit-scrollbar-track {
-          background: #1e293b;
-        }
-
-        :global(.dark) .message-content .code-block::-webkit-scrollbar-thumb {
-          background: #475569;
-        }
-      `}</style>
     </div>
   );
 };

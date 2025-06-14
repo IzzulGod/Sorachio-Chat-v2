@@ -81,31 +81,11 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     setTimeout(renderMath, 100);
   }, [katexReady, message.content, isUser]);
 
-  // Copy function
-  const copyToClipboard = (text: string, button: HTMLElement) => {
-    navigator.clipboard.writeText(text).then(() => {
-      const originalText = button.textContent;
-      button.textContent = 'Copied!';
-      button.style.backgroundColor = '#10b981';
-      button.style.color = 'white';
-      setTimeout(() => {
-        button.textContent = originalText;
-        button.style.backgroundColor = '';
-        button.style.color = '';
-      }, 2000);
-    }).catch(() => {
-      button.textContent = 'Failed';
-      setTimeout(() => {
-        button.textContent = 'Copy';
-      }, 2000);
-    });
-  };
-
-  // Improved content processing
+  // Simple content processing without copy functionality
   const processContent = (content: string) => {
     let processed = content;
 
-    // Process code blocks first with better regex
+    // Process code blocks without copy button
     processed = processed.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'plaintext';
       const cleanCode = code.trim();
@@ -115,14 +95,10 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      const copyData = cleanCode.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-      const buttonId = `copy-btn-${Math.random().toString(36).substr(2, 9)}`;
-      
       return `
         <div class="code-block-wrapper">
           <div class="code-header">
             <span class="code-lang">${language}</span>
-            <button id="${buttonId}" class="copy-btn" onclick="copyCode('${copyData}', '${buttonId}')">Copy</button>
           </div>
           <pre class="code-content"><code>${escapedCode}</code></pre>
         </div>
@@ -156,18 +132,8 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     return processed;
   };
 
-  // Add global copy function and styles
+  // Add simplified styles without copy button functionality
   useEffect(() => {
-    // Add copy function to window
-    (window as any).copyCode = (text: string, buttonId: string) => {
-      const decodedText = text.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-      const button = document.getElementById(buttonId);
-      if (button) {
-        copyToClipboard(decodedText, button);
-      }
-    };
-
-    // Add styles if not present
     const styleId = 'message-styles';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
@@ -188,9 +154,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         }
         
         .code-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
           padding: 8px 16px;
           background: #e9ecef;
           border-bottom: 1px solid #dee2e6;
@@ -210,30 +173,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         
         .dark .code-lang {
           color: #9ca3af;
-        }
-        
-        .copy-btn {
-          background: #fff;
-          border: 1px solid #ced4da;
-          padding: 4px 8px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 11px;
-          transition: all 0.2s;
-        }
-        
-        .copy-btn:hover {
-          background: #f8f9fa;
-        }
-        
-        .dark .copy-btn {
-          background: #404040;
-          border-color: #606060;
-          color: #e5e5e5;
-        }
-        
-        .dark .copy-btn:hover {
-          background: #505050;
         }
         
         .code-content {
@@ -297,11 +236,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
             padding: 12px;
             font-size: 13px;
           }
-          
-          .copy-btn {
-            padding: 3px 6px;
-            font-size: 10px;
-          }
         }
       `;
       document.head.appendChild(style);
@@ -345,7 +279,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       </div>
       
       {isUser && (
-        <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center flex-shrink-0">
           <User className="w-4 h-4 text-white" />
         </div>
       )}

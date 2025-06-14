@@ -1,3 +1,4 @@
+
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -11,19 +12,18 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [katexReady, setKatexReady] = useState(false);
   
-  // Simple KaTeX loader
+  // Load KaTeX for math rendering
   useEffect(() => {
     if (isUser || katexReady) return;
     
     const loadKaTeX = async () => {
       try {
-        // Check if already loaded
         if ((window as any).katex && (window as any).renderMathInElement) {
           setKatexReady(true);
           return;
         }
 
-        // Load CSS
+        // Load CSS first
         if (!document.querySelector('link[href*="katex"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
@@ -31,19 +31,22 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           document.head.appendChild(link);
         }
 
-        // Load KaTeX
+        // Load KaTeX JS
         if (!(window as any).katex) {
-          const script1 = document.createElement('script');
-          script1.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
-          script1.onload = () => {
-            // Load auto-render after KaTeX
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
-            script2.onload = () => setKatexReady(true);
-            document.head.appendChild(script2);
-          };
-          document.head.appendChild(script1);
+          await new Promise((resolve) => {
+            const script1 = document.createElement('script');
+            script1.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
+            script1.onload = () => {
+              const script2 = document.createElement('script');
+              script2.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
+              script2.onload = () => resolve(true);
+              document.head.appendChild(script2);
+            };
+            document.head.appendChild(script1);
+          });
         }
+        
+        setKatexReady(true);
       } catch (error) {
         console.warn('KaTeX loading failed:', error);
       }
@@ -52,7 +55,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     loadKaTeX();
   }, [isUser, katexReady]);
 
-  // Render math when ready
+  // Render math when content changes
   useEffect(() => {
     if (!katexReady || !contentRef.current || isUser) return;
 
@@ -75,64 +78,77 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       }
     };
 
-    setTimeout(renderMath, 50);
-    setTimeout(renderMath, 200);
-    setTimeout(renderMath, 500);
+    setTimeout(renderMath, 100);
   }, [katexReady, message.content, isUser]);
 
+  // Copy function
+  const copyToClipboard = (text: string, button: HTMLElement) => {
+    navigator.clipboard.writeText(text).then(() => {
+      const originalText = button.textContent;
+      button.textContent = 'Copied!';
+      button.style.backgroundColor = '#10b981';
+      button.style.color = 'white';
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.style.backgroundColor = '';
+        button.style.color = '';
+      }, 2000);
+    }).catch(() => {
+      button.textContent = 'Failed';
+      setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 2000);
+    });
+  };
+
+  // Improved content processing
   const processContent = (content: string) => {
     let processed = content;
 
-    // Code blocks - improved regex
-    processed = processed.replace(/```([a-zA-Z]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
-      const language = lang || 'text';
+    // Process code blocks first with better regex
+    processed = processed.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+      const language = lang || 'plaintext';
       const cleanCode = code.trim();
       const escapedCode = cleanCode
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/"/g, '&quot;');
       
-      const copyCode = cleanCode.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+      const copyData = cleanCode.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+      const buttonId = `copy-btn-${Math.random().toString(36).substr(2, 9)}`;
       
-      return `<div class="code-container">
-        <div class="code-header">
-          <span class="code-lang">${language}</span>
-          <button class="copy-button" onclick="copyToClipboard('${copyCode}', this)">Copy</button>
+      return `
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">${language}</span>
+            <button id="${buttonId}" class="copy-btn" onclick="copyCode('${copyData}', '${buttonId}')">Copy</button>
+          </div>
+          <pre class="code-content"><code>${escapedCode}</code></pre>
         </div>
-        <pre class="code-pre"><code class="code-content">${escapedCode}</code></pre>
-      </div>`;
+      `;
     });
 
-    // Inline code - improved regex
-    processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, (match, code) => {
-      const escapedCode = code
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-      return `<code class="inline-code">${escapedCode}</code>`;
-    });
+    // Process inline code
+    processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, '<code class="inline-code">$1</code>');
 
     // Headers
     processed = processed.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
       const level = hashes.length;
-      return `<h${level} class="header-${level} mb-2 mt-4">${text.trim()}</h${level}>`;
+      return `<h${level} class="header-${level}">${text.trim()}</h${level}>`;
     });
 
-    // Bold
+    // Bold and italic
     processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
-    // Italic
     processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     // Lists
-    processed = processed.replace(/^[\-\*]\s+(.+)$/gm, '<li class="list-item">$1</li>');
-    processed = processed.replace(/(<li class="list-item">.*?<\/li>)/gs, '<ul class="list mb-2">$1</ul>');
+    processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>');
+    processed = processed.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
 
     // Links
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
-      '<a href="$2" class="link" target="_blank" rel="noopener noreferrer">$1</a>');
+      '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>');
 
     // Line breaks
     processed = processed.replace(/\n/g, '<br>');
@@ -140,56 +156,38 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     return processed;
   };
 
-  // Inject copy function and styles
+  // Add global copy function and styles
   useEffect(() => {
     // Add copy function to window
-    if (!(window as any).copyToClipboard) {
-      (window as any).copyToClipboard = (text: string, button: HTMLElement) => {
-        navigator.clipboard.writeText(text).then(() => {
-          const originalText = button.textContent;
-          button.textContent = 'Copied!';
-          button.style.backgroundColor = '#10b981';
-          setTimeout(() => {
-            button.textContent = originalText;
-            button.style.backgroundColor = '';
-          }, 2000);
-        }).catch(() => {
-          button.textContent = 'Failed';
-          setTimeout(() => {
-            button.textContent = 'Copy';
-          }, 2000);
-        });
-      };
-    }
+    (window as any).copyCode = (text: string, buttonId: string) => {
+      const decodedText = text.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      const button = document.getElementById(buttonId);
+      if (button) {
+        copyToClipboard(decodedText, button);
+      }
+    };
 
-    // Inject styles
-    const styleId = 'message-bubble-styles';
+    // Add styles if not present
+    const styleId = 'message-styles';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;
       style.textContent = `
-        .message-content {
-          line-height: 1.6;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        }
-
-        .message-content .code-container {
+        .code-block-wrapper {
           margin: 16px 0;
           border-radius: 8px;
           overflow: hidden;
           background: #f8f9fa;
           border: 1px solid #e9ecef;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
         }
-
-        .dark .message-content .code-container {
-          background: #1a1b23;
-          border-color: #333742;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        
+        .dark .code-block-wrapper {
+          background: #1e1e1e;
+          border-color: #404040;
         }
-
-        .message-content .code-header {
+        
+        .code-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -198,198 +196,112 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           border-bottom: 1px solid #dee2e6;
           font-size: 12px;
         }
-
-        .dark .message-content .code-header {
-          background: #2d3748;
-          border-bottom-color: #4a5568;
-          color: #e2e8f0;
+        
+        .dark .code-header {
+          background: #2d2d2d;
+          border-bottom-color: #404040;
         }
-
-        .message-content .code-lang {
+        
+        .code-lang {
           font-weight: 600;
           text-transform: uppercase;
           color: #6c757d;
-          font-size: 11px;
         }
-
-        .dark .message-content .code-lang {
-          color: #a0aec0;
+        
+        .dark .code-lang {
+          color: #9ca3af;
         }
-
-        .message-content .copy-button {
-          background: #ffffff;
+        
+        .copy-btn {
+          background: #fff;
           border: 1px solid #ced4da;
-          padding: 4px 12px;
+          padding: 4px 8px;
           border-radius: 4px;
           cursor: pointer;
           font-size: 11px;
-          font-weight: 500;
-          color: #495057;
-          transition: all 0.2s ease;
+          transition: all 0.2s;
         }
-
-        .message-content .copy-button:hover {
+        
+        .copy-btn:hover {
           background: #f8f9fa;
-          border-color: #adb5bd;
         }
-
-        .dark .message-content .copy-button {
-          background: #4a5568;
-          color: #e2e8f0;
-          border-color: #718096;
+        
+        .dark .copy-btn {
+          background: #404040;
+          border-color: #606060;
+          color: #e5e5e5;
         }
-
-        .dark .message-content .copy-button:hover {
-          background: #718096;
-          border-color: #a0aec0;
+        
+        .dark .copy-btn:hover {
+          background: #505050;
         }
-
-        .message-content .code-pre {
-          margin: 0;
+        
+        .code-content {
           padding: 16px;
+          margin: 0;
           overflow-x: auto;
-          background: #ffffff;
-          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+          background: #fff;
+          color: #24292e;
           font-size: 14px;
           line-height: 1.4;
-          color: #24292e;
-          white-space: pre;
         }
-
-        .dark .message-content .code-pre {
+        
+        .dark .code-content {
           background: #0d1117;
           color: #f0f6fc;
         }
-
-        .message-content .code-content {
-          display: block;
+        
+        .code-content code {
           background: none;
-          border: none;
           padding: 0;
-          margin: 0;
+          border-radius: 0;
           font-family: inherit;
           font-size: inherit;
           color: inherit;
-          white-space: pre;
-          overflow-x: auto;
         }
-
-        .message-content .inline-code {
+        
+        .inline-code {
           background: #f1f3f4;
           padding: 2px 6px;
           border-radius: 4px;
-          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+          font-family: 'SF Mono', 'Monaco', monospace;
           font-size: 0.9em;
           color: #d73a49;
-          font-weight: 500;
           border: 1px solid #e1e4e8;
         }
-
-        .dark .message-content .inline-code {
+        
+        .dark .inline-code {
           background: #282c34;
           color: #98c379;
           border-color: #444c56;
         }
-
-        /* Mobile responsive styles */
+        
+        .header-1 { font-size: 1.5em; font-weight: bold; margin: 16px 0 8px 0; }
+        .header-2 { font-size: 1.3em; font-weight: bold; margin: 14px 0 6px 0; }
+        .header-3 { font-size: 1.1em; font-weight: bold; margin: 12px 0 4px 0; }
+        
+        ul { padding-left: 20px; margin: 8px 0; }
+        li { margin: 4px 0; }
+        
         @media (max-width: 640px) {
-          .message-content .code-container {
+          .code-block-wrapper {
             margin: 12px 0;
             border-radius: 6px;
           }
           
-          .message-content .code-header {
+          .code-header {
             padding: 6px 12px;
-            font-size: 11px;
           }
           
-          .message-content .code-pre {
+          .code-content {
             padding: 12px;
             font-size: 13px;
-            line-height: 1.3;
           }
           
-          .message-content .copy-button {
-            padding: 3px 8px;
+          .copy-btn {
+            padding: 3px 6px;
             font-size: 10px;
           }
-        }
-
-        /* Headers styling */
-        .message-content .header-1 { 
-          font-size: 1.4em; 
-          font-weight: bold; 
-          color: #1a1a1a;
-          margin: 16px 0 8px 0;
-        }
-        .message-content .header-2 { 
-          font-size: 1.25em; 
-          font-weight: bold; 
-          color: #1a1a1a;
-          margin: 14px 0 6px 0;
-        }
-        .message-content .header-3 { 
-          font-size: 1.15em; 
-          font-weight: bold; 
-          color: #1a1a1a;
-          margin: 12px 0 4px 0;
-        }
-
-        .dark .message-content .header-1,
-        .dark .message-content .header-2,
-        .dark .message-content .header-3 { 
-          color: #e5e5e5; 
-        }
-
-        .message-content strong { font-weight: bold; }
-        .message-content em { font-style: italic; }
-
-        .message-content .list {
-          padding-left: 20px;
-          list-style-type: disc;
-          margin: 8px 0;
-        }
-        .message-content .list-item {
-          margin: 4px 0;
-        }
-
-        .message-content .link {
-          color: #0366d6;
-          text-decoration: underline;
-          transition: color 0.2s;
-        }
-        .message-content .link:hover {
-          color: #0256cc;
-        }
-
-        .dark .message-content .link {
-          color: #58a6ff;
-        }
-        .dark .message-content .link:hover {
-          color: #79c0ff;
-        }
-
-        /* KaTeX styles */
-        .message-content .katex {
-          font-size: 1.1em;
-        }
-
-        .message-content .katex-display {
-          margin: 16px 0;
-          text-align: center;
-          overflow-x: auto;
-        }
-
-        .message-content .katex-error {
-          color: #d73a49;
-          background: #ffeef0;
-          padding: 2px 4px;
-          border-radius: 3px;
-        }
-
-        .dark .message-content .katex-error {
-          color: #ff7b72;
-          background: #490202;
         }
       `;
       document.head.appendChild(style);
@@ -410,7 +322,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         px-4 py-3 rounded-lg relative overflow-hidden
         ${isUser 
           ? 'bg-blue-600 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[80%] lg:max-w-[70%] xl:max-w-[65%]'
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]'
         }
       `}>
         {message.image && (
@@ -426,7 +338,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         ) : (
           <div
             ref={contentRef}
-            className="text-sm message-content break-words"
+            className="text-sm break-words"
             dangerouslySetInnerHTML={{ __html: processContent(message.content) }}
           />
         )}

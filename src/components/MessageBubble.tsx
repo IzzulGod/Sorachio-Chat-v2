@@ -1,4 +1,3 @@
-
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef } from 'react';
@@ -22,30 +21,55 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   
   useEffect(() => {
     if (contentRef.current && !isUser) {
-      // Render math expressions with KaTeX
-      if (window.renderMathInElement) {
-        try {
-          window.renderMathInElement(contentRef.current, {
-            delimiters: [
-              { left: '$$', right: '$$', display: true },
-              { left: '$', right: '$', display: false },
-              { left: '\\[', right: '\\]', display: true },
-              { left: '\\(', right: '\\)', display: false }
-            ],
-            throwOnError: false,
-            errorColor: '#cc0000',
-            macros: {
-              '\\RR': '\\mathbb{R}',
-              '\\NN': '\\mathbb{N}',
-              '\\ZZ': '\\mathbb{Z}',
-              '\\QQ': '\\mathbb{Q}',
-              '\\CC': '\\mathbb{C}'
-            }
+      // Load KaTeX and auto-render if not already loaded
+      const loadKaTeX = async () => {
+        if (!window.katex) {
+          const katexScript = document.createElement('script');
+          katexScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.js';
+          katexScript.crossOrigin = 'anonymous';
+          document.head.appendChild(katexScript);
+          
+          const autoRenderScript = document.createElement('script');
+          autoRenderScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min.js';
+          autoRenderScript.crossOrigin = 'anonymous';
+          document.head.appendChild(autoRenderScript);
+          
+          await new Promise((resolve) => {
+            autoRenderScript.onload = resolve;
           });
-        } catch (error) {
-          console.warn('KaTeX rendering failed:', error);
         }
-      }
+        
+        // Wait a bit more to ensure scripts are fully loaded
+        setTimeout(() => {
+          if (window.renderMathInElement && contentRef.current) {
+            try {
+              window.renderMathInElement(contentRef.current, {
+                delimiters: [
+                  { left: '$$', right: '$$', display: true },
+                  { left: '$', right: '$', display: false },
+                  { left: '\\[', right: '\\]', display: true },
+                  { left: '\\(', right: '\\)', display: false }
+                ],
+                throwOnError: false,
+                errorColor: '#cc0000',
+                strict: false,
+                trust: true,
+                macros: {
+                  '\\RR': '\\mathbb{R}',
+                  '\\NN': '\\mathbb{N}',
+                  '\\ZZ': '\\mathbb{Z}',
+                  '\\QQ': '\\mathbb{Q}',
+                  '\\CC': '\\mathbb{C}'
+                }
+              });
+            } catch (error) {
+              console.warn('KaTeX rendering failed:', error);
+            }
+          }
+        }, 100);
+      };
+      
+      loadKaTeX();
 
       // Highlight code blocks with Prism
       if (window.Prism) {
@@ -61,6 +85,38 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   // Enhanced content processing for better markdown support and clickable links
   const processContent = (content: string) => {
     let processedContent = content;
+
+    // PERBAIKAN: Jangan proses LaTeX math di dalam processContent
+    // Simpan math expressions dan ganti dengan placeholder
+    const mathExpressions: string[] = [];
+    
+    // Handle display math $$...$$
+    processedContent = processedContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+      const index = mathExpressions.length;
+      mathExpressions.push(match);
+      return `__MATH_DISPLAY_${index}__`;
+    });
+    
+    // Handle inline math $...$
+    processedContent = processedContent.replace(/\$([^$\n]+)\$/g, (match, math) => {
+      const index = mathExpressions.length;
+      mathExpressions.push(match);
+      return `__MATH_INLINE_${index}__`;
+    });
+    
+    // Handle LaTeX style \[...\]
+    processedContent = processedContent.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
+      const index = mathExpressions.length;
+      mathExpressions.push(match);
+      return `__MATH_DISPLAY_${index}__`;
+    });
+    
+    // Handle LaTeX style \(...\)
+    processedContent = processedContent.replace(/\\\(([\s\S]*?)\\\)/g, (match, math) => {
+      const index = mathExpressions.length;
+      mathExpressions.push(match);
+      return `__MATH_INLINE_${index}__`;
+    });
 
     // Handle code blocks first (```language\ncode\n```)
     const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
@@ -144,6 +200,12 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
     // Convert remaining newlines to <br> but preserve block elements
     processedContent = processedContent.replace(/\n(?![<])/g, '<br>');
+
+    // PERBAIKAN: Kembalikan math expressions
+    mathExpressions.forEach((mathExpr, index) => {
+      processedContent = processedContent.replace(`__MATH_DISPLAY_${index}__`, mathExpr);
+      processedContent = processedContent.replace(`__MATH_INLINE_${index}__`, mathExpr);
+    });
 
     return processedContent;
   };

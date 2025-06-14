@@ -98,39 +98,26 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
 
   return (
     <div className="border-t border-border bg-background p-4">
-      {/* Enhanced Recording Feedback */}
+      {/* Simplified Recording Feedback */}
       {isListening && (
-        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
-                <div className="absolute inset-0 w-4 h-4 bg-red-500 rounded-full animate-ping opacity-30"></div>
-              </div>
-              <span className="text-sm font-medium text-red-700">🎤 Recording voice...</span>
-            </div>
-            <div className="flex space-x-1">
-              <div className="w-1 h-4 bg-red-400 rounded-full animate-pulse"></div>
-              <div className="w-1 h-6 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-1 h-3 bg-red-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-1 h-5 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-red-700">Recording...</span>
             </div>
           </div>
-          <Progress value={recordingProgress} className="h-2 mb-2" />
-          <p className="text-xs text-red-600">💡 Speak clearly, tap mic again to stop</p>
+          <Progress value={recordingProgress} className="h-1" />
+          <p className="text-xs text-red-600 mt-1">Tap microphone to stop</p>
         </div>
       )}
 
-      {/* Enhanced Success Feedback */}
+      {/* Simplified Success Feedback */}
       {showRecordingFeedback && transcript && (
-        <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg animate-fade-in">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-green-700">✨ Voice captured successfully!</span>
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-sm text-green-700">Voice captured</span>
           </div>
           <p className="text-xs text-green-600 bg-green-100 p-2 rounded italic">"{transcript.substring(0, 80)}..."</p>
         </div>

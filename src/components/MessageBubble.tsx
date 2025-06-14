@@ -1,4 +1,3 @@
-
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -110,7 +109,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     setTimeout(renderMath, 100);
   }, [katexReady, message.content, isUser]);
 
-  // Balanced content processing for both desktop and mobile
+  // Simplified content processing that works on both desktop and mobile
   const processContent = (content: string) => {
     const isMobile = window.innerWidth <= 768;
     console.log('🔄 Processing content:', {
@@ -122,7 +121,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     
     let processed = content;
 
-    // Process code blocks with responsive styles
+    // Process code blocks with consistent styling
     processed = processed.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'plaintext';
       const cleanCode = code.trim();
@@ -138,85 +137,37 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      // Responsive design with CSS classes + inline styles for reliability
-      const result = `
-        <div class="code-block-container" style="
-          margin: 12px 0; 
-          border-radius: 6px; 
-          overflow: hidden; 
-          background: #f8f9fa; 
-          border: 1px solid #e9ecef; 
-          font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-          width: 100%;
-          box-sizing: border-box;
-        ">
-          <div class="code-header" style="
-            padding: 8px 12px; 
-            background: #e9ecef; 
-            border-bottom: 1px solid #dee2e6; 
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #6c757d;
-            letter-spacing: 0.5px;
-          ">${language}</div>
-          <div class="code-content" style="
-            background: #fff;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            width: 100%;
-            box-sizing: border-box;
-          ">
-            <pre style="
-              padding: ${isMobile ? '10px' : '12px'}; 
-              margin: 0; 
-              background: #fff; 
-              color: #24292e; 
-              font-size: ${isMobile ? '13px' : '14px'}; 
-              line-height: 1.5;
-              white-space: pre;
-              overflow-x: auto;
-              -webkit-overflow-scrolling: touch;
-              font-family: inherit;
-            "><code style="
-              background: none; 
-              padding: 0; 
-              border-radius: 0; 
-              font-family: inherit; 
-              font-size: inherit; 
-              color: inherit;
-              white-space: pre;
-            ">${escapedCode}</code></pre>
-          </div>
+      // Simplified and consistent code block styling
+      return `<div class="my-4 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+        <div class="px-3 py-2 bg-gray-100 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wide">${language}</div>
+        <div class="overflow-x-auto">
+          <pre class="p-4 text-sm leading-relaxed text-gray-800 font-mono whitespace-pre overflow-x-auto"><code>${escapedCode}</code></pre>
         </div>
-      `;
-      
-      console.log('✅ Code block processed');
-      return result;
+      </div>`;
     });
 
     // Process inline code
     processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, 
-      '<code style="background: #f1f3f4; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #d73a49;">$1</code>');
+      '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-red-600">$1</code>');
 
     // Headers
     processed = processed.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
       const level = hashes.length;
-      const fontSize = level === 1 ? '1.5em' : level === 2 ? '1.3em' : '1.1em';
-      return `<h${level} style="font-size: ${fontSize}; font-weight: bold; margin: 16px 0 8px 0; color: #1a202c;">${text.trim()}</h${level}>`;
+      const className = level === 1 ? 'text-xl font-bold' : level === 2 ? 'text-lg font-semibold' : 'text-base font-medium';
+      return `<h${level} class="${className} mt-6 mb-3 text-gray-900">${text.trim()}</h${level}>`;
     });
 
     // Bold and italic
-    processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600;">$1</strong>');
-    processed = processed.replace(/\*(.*?)\*/g, '<em style="font-style: italic;">$1</em>');
+    processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>');
+    processed = processed.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
 
     // Lists
-    processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li style="margin: 4px 0; padding-left: 4px;">$1</li>');
-    processed = processed.replace(/(<li.*?>.*<\/li>)/gs, '<ul style="padding-left: 20px; margin: 8px 0; list-style-type: disc;">$1</ul>');
+    processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li class="ml-4 mb-1">$1</li>');
+    processed = processed.replace(/(<li.*?>.*<\/li>)/gs, '<ul class="list-disc pl-5 my-3">$1</ul>');
 
     // Links
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
-      '<a href="$2" style="color: #2563eb; text-decoration: underline;" target="_blank" rel="noopener noreferrer">$1</a>');
+      '<a href="$2" class="text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer">$1</a>');
 
     // Line breaks
     processed = processed.replace(/\n/g, '<br>');
@@ -241,7 +192,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       )}
       
       <div className={`
-        px-4 py-3 rounded-lg relative overflow-hidden
+        px-4 py-3 rounded-lg relative
         ${isUser 
           ? 'bg-gray-500 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
           : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]'
@@ -260,13 +211,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         ) : (
           <div
             ref={contentRef}
-            className="text-sm break-words prose prose-sm max-w-none"
-            style={{ 
-              wordWrap: 'break-word', 
-              overflowWrap: 'break-word',
-              width: '100%',
-              maxWidth: '100%'
-            }}
+            className="text-sm break-words prose prose-sm max-w-none [&>div]:overflow-x-auto [&>div>div>pre]:overflow-x-auto"
             dangerouslySetInnerHTML={{ __html: processContent(message.content) }}
           />
         )}

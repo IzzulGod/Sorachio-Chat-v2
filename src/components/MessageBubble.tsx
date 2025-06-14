@@ -1,3 +1,4 @@
+
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -17,7 +18,8 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       role: message.role,
       contentLength: message.content?.length || 0,
       contentPreview: message.content?.substring(0, 100),
-      hasImage: !!message.image
+      hasImage: !!message.image,
+      isMobile: window.innerWidth <= 768
     });
   }, [message]);
   
@@ -92,9 +94,11 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
   // Simple content processing without copy functionality
   const processContent = (content: string) => {
+    const isMobile = window.innerWidth <= 768;
     console.log('Processing content:', {
       originalLength: content.length,
-      contentPreview: content.substring(0, 200)
+      contentPreview: content.substring(0, 200),
+      isMobile
     });
     
     let processed = content;
@@ -112,35 +116,41 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         .replace(/"/g, '&quot;');
       
       return `
-        <div class="code-block-wrapper">
-          <div class="code-header">
-            <span class="code-lang">${language}</span>
+        <div class="code-block-wrapper" style="margin: 16px 0; border-radius: 8px; overflow: hidden; background: #f8f9fa; border: 1px solid #e9ecef; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;">
+          <div class="code-header" style="padding: 8px 16px; background: #e9ecef; border-bottom: 1px solid #dee2e6; font-size: 12px;">
+            <span class="code-lang" style="font-weight: 600; text-transform: uppercase; color: #6c757d;">${language}</span>
           </div>
-          <pre class="code-content"><code>${escapedCode}</code></pre>
+          <pre class="code-content" style="padding: 16px; margin: 0; overflow-x: auto; background: #fff; color: #24292e; font-size: 14px; line-height: 1.4;"><code style="background: none; padding: 0; border-radius: 0; font-family: inherit; font-size: inherit; color: inherit;">${escapedCode}</code></pre>
         </div>
       `;
     });
 
-    // Process inline code
-    processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, '<code class="inline-code">$1</code>');
+    // Process inline code with inline styles for better mobile compatibility
+    processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, 
+      '<code style="background: #f1f3f4; padding: 2px 6px; border-radius: 4px; font-family: \'SF Mono\', \'Monaco\', monospace; font-size: 0.9em; color: #d73a49; border: 1px solid #e1e4e8;">$1</code>');
 
-    // Headers
+    // Headers with inline styles
     processed = processed.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
       const level = hashes.length;
-      return `<h${level} class="header-${level}">${text.trim()}</h${level}>`;
+      const styles = {
+        1: 'font-size: 1.5em; font-weight: bold; margin: 16px 0 8px 0;',
+        2: 'font-size: 1.3em; font-weight: bold; margin: 14px 0 6px 0;',
+        3: 'font-size: 1.1em; font-weight: bold; margin: 12px 0 4px 0;'
+      };
+      return `<h${level} style="${styles[level as keyof typeof styles] || styles[3]}">${text.trim()}</h${level}>`;
     });
 
     // Bold and italic
     processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-    // Lists
-    processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>');
-    processed = processed.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+    // Lists with inline styles
+    processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li style="margin: 4px 0;">$1</li>');
+    processed = processed.replace(/(<li.*?>.*<\/li>)/gs, '<ul style="padding-left: 20px; margin: 8px 0;">$1</ul>');
 
     // Links
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
-      '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>');
+      '<a href="$2" style="color: #2563eb; text-decoration: underline;" target="_blank" rel="noopener noreferrer">$1</a>');
 
     // Line breaks
     processed = processed.replace(/\n/g, '<br>');
@@ -153,110 +163,99 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     return processed;
   };
 
-  // Add simplified styles without copy button functionality
+  // Mobile-friendly styles with better specificity
   useEffect(() => {
-    const styleId = 'message-styles';
+    const styleId = 'message-styles-mobile';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;
       style.textContent = `
+        /* Mobile-first approach for code blocks */
         .code-block-wrapper {
-          margin: 16px 0;
-          border-radius: 8px;
-          overflow: hidden;
-          background: #f8f9fa;
-          border: 1px solid #e9ecef;
-          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-        }
-        
-        .dark .code-block-wrapper {
-          background: #1e1e1e;
-          border-color: #404040;
+          margin: 12px 0 !important;
+          border-radius: 6px !important;
+          overflow: hidden !important;
+          background: #f8f9fa !important;
+          border: 1px solid #e9ecef !important;
+          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace !important;
+          max-width: 100% !important;
+          font-size: 13px !important;
         }
         
         .code-header {
-          padding: 8px 16px;
-          background: #e9ecef;
-          border-bottom: 1px solid #dee2e6;
-          font-size: 12px;
-        }
-        
-        .dark .code-header {
-          background: #2d2d2d;
-          border-bottom-color: #404040;
+          padding: 6px 12px !important;
+          background: #e9ecef !important;
+          border-bottom: 1px solid #dee2e6 !important;
+          font-size: 11px !important;
         }
         
         .code-lang {
-          font-weight: 600;
-          text-transform: uppercase;
-          color: #6c757d;
-        }
-        
-        .dark .code-lang {
-          color: #9ca3af;
+          font-weight: 600 !important;
+          text-transform: uppercase !important;
+          color: #6c757d !important;
         }
         
         .code-content {
-          padding: 16px;
-          margin: 0;
-          overflow-x: auto;
-          background: #fff;
-          color: #24292e;
-          font-size: 14px;
-          line-height: 1.4;
-        }
-        
-        .dark .code-content {
-          background: #0d1117;
-          color: #f0f6fc;
+          padding: 12px !important;
+          margin: 0 !important;
+          overflow-x: auto !important;
+          background: #fff !important;
+          color: #24292e !important;
+          font-size: 13px !important;
+          line-height: 1.4 !important;
+          -webkit-overflow-scrolling: touch !important;
         }
         
         .code-content code {
-          background: none;
-          padding: 0;
-          border-radius: 0;
-          font-family: inherit;
-          font-size: inherit;
-          color: inherit;
+          background: none !important;
+          padding: 0 !important;
+          border-radius: 0 !important;
+          font-family: inherit !important;
+          font-size: inherit !important;
+          color: inherit !important;
         }
         
-        .inline-code {
-          background: #f1f3f4;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-family: 'SF Mono', 'Monaco', monospace;
-          font-size: 0.9em;
-          color: #d73a49;
-          border: 1px solid #e1e4e8;
-        }
-        
-        .dark .inline-code {
-          background: #282c34;
-          color: #98c379;
-          border-color: #444c56;
-        }
-        
-        .header-1 { font-size: 1.5em; font-weight: bold; margin: 16px 0 8px 0; }
-        .header-2 { font-size: 1.3em; font-weight: bold; margin: 14px 0 6px 0; }
-        .header-3 { font-size: 1.1em; font-weight: bold; margin: 12px 0 4px 0; }
-        
-        ul { padding-left: 20px; margin: 8px 0; }
-        li { margin: 4px 0; }
-        
-        @media (max-width: 640px) {
+        /* Dark theme support */
+        @media (prefers-color-scheme: dark) {
           .code-block-wrapper {
-            margin: 12px 0;
-            border-radius: 6px;
+            background: #1e1e1e !important;
+            border-color: #404040 !important;
           }
           
           .code-header {
-            padding: 6px 12px;
+            background: #2d2d2d !important;
+            border-bottom-color: #404040 !important;
+          }
+          
+          .code-lang {
+            color: #9ca3af !important;
           }
           
           .code-content {
-            padding: 12px;
-            font-size: 13px;
+            background: #0d1117 !important;
+            color: #f0f6fc !important;
           }
+        }
+        
+        /* Ensure math rendering works on mobile */
+        .katex {
+          font-size: 1em !important;
+          max-width: 100% !important;
+          overflow-x: auto !important;
+        }
+        
+        .katex-display {
+          margin: 12px 0 !important;
+          text-align: center !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          -webkit-overflow-scrolling: touch !important;
+        }
+        
+        .katex-display > .katex {
+          display: inline-block !important;
+          white-space: nowrap !important;
+          max-width: 100% !important;
         }
       `;
       document.head.appendChild(style);

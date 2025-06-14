@@ -1,6 +1,8 @@
+
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from '@/components/MessageBubble';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { TypingIndicator } from '@/components/TypingIndicator';
 import { Message } from '@/types/chat';
 import { RefObject } from 'react';
 
@@ -28,23 +30,21 @@ export const ChatContainer = ({
   
   return (
     <div className="flex flex-col h-full bg-background text-foreground">
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleToggleClick}
-          className={`p-2 hover:bg-accent rounded-md z-50 relative ${
+          className={`p-2 hover:bg-accent rounded-md z-50 relative hover:scale-105 transition-all duration-200 ${
             sidebarOpen ? 'hidden md:block' : 'block'
           }`}
           style={{ zIndex: 9999 }}
         >
           {sidebarOpen ? (
-            // Back/Close icon when sidebar is open (desktop only)
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground">
               <path d="m15 18-6-6 6-6"/>
             </svg>
           ) : (
-            // Hamburger menu icon when sidebar is closed
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground">
               <line x1="3" y1="6" x2="21" y2="6"/>
               <line x1="3" y1="12" x2="21" y2="12"/>
@@ -52,13 +52,16 @@ export const ChatContainer = ({
             </svg>
           )}
         </Button>
-        <h1 className="text-lg font-semibold text-foreground">Sorachio</h1>
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <h1 className="text-lg font-semibold text-foreground">Sorachio AI</h1>
+        </div>
         <ThemeToggle />
       </div>
       
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-6 space-y-6"
+        className="flex-1 overflow-y-auto px-4 py-6 space-y-6 chat-messages"
         style={{ scrollBehavior: 'smooth' }}
       >
         <div className="max-w-4xl mx-auto space-y-6">
@@ -66,25 +69,7 @@ export const ChatContainer = ({
             <MessageBubble key={message.id} message={message} />
           ))}
           
-          {isLoading && (
-            <div className="flex items-start space-x-3">
-              <img 
-                src="/lovable-uploads/63083a92-c115-4af0-86c6-164b93752c8c.png" 
-                alt="Sorachio" 
-                className="w-8 h-8 rounded-full flex-shrink-0"
-              />
-              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]">
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm text-muted-foreground">Thinking</span>
-                  <div className="flex space-x-1">
-                    <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce"></div>
-                    <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          <TypingIndicator isVisible={isLoading} />
         </div>
       </div>
     </div>

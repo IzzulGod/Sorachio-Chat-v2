@@ -1,6 +1,7 @@
 import { Message } from '@/types/chat';
 import { User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { MessageStatus } from '@/components/MessageStatus';
 
 interface MessageBubbleProps {
   message: Message;
@@ -10,6 +11,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const isUser = message.role === 'user';
   const contentRef = useRef<HTMLDivElement>(null);
   const [katexReady, setKatexReady] = useState(false);
+  const [messageStatus, setMessageStatus] = useState<'sending' | 'sent' | 'error'>('sent');
   
   // Enhanced logging for mobile debugging
   useEffect(() => {
@@ -29,6 +31,17 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     }
   }, [message, isUser]);
   
+  // Simulate message status for user messages
+  useEffect(() => {
+    if (isUser) {
+      setMessageStatus('sending');
+      const timer = setTimeout(() => {
+        setMessageStatus('sent');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isUser]);
+  
   // Load KaTeX for math rendering
   useEffect(() => {
     if (isUser || katexReady) return;
@@ -43,7 +56,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
 
         console.log('⏳ Loading KaTeX...');
 
-        // Load CSS first
         if (!document.querySelector('link[href*="katex"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
@@ -52,7 +64,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           console.log('📄 KaTeX CSS loaded');
         }
 
-        // Load KaTeX JS
         if (!(window as any).katex) {
           await new Promise((resolve) => {
             const script1 = document.createElement('script');
@@ -121,7 +132,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     
     let processed = content;
 
-    // Process code blocks with consistent styling
     processed = processed.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'plaintext';
       const cleanCode = code.trim();
@@ -137,7 +147,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      // Simplified and consistent code block styling
       return `<div class="my-4 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
         <div class="px-3 py-2 bg-gray-100 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wide">${language}</div>
         <div class="overflow-x-auto">
@@ -146,30 +155,24 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       </div>`;
     });
 
-    // Process inline code
     processed = processed.replace(/(?<!`)`([^`\n]+)`(?!`)/g, 
       '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-red-600">$1</code>');
 
-    // Headers
     processed = processed.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
       const level = hashes.length;
       const className = level === 1 ? 'text-xl font-bold' : level === 2 ? 'text-lg font-semibold' : 'text-base font-medium';
       return `<h${level} class="${className} mt-6 mb-3 text-gray-900">${text.trim()}</h${level}>`;
     });
 
-    // Bold and italic
     processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>');
     processed = processed.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
 
-    // Lists
     processed = processed.replace(/^[-*]\s+(.+)$/gm, '<li class="ml-4 mb-1">$1</li>');
     processed = processed.replace(/(<li.*?>.*<\/li>)/gs, '<ul class="list-disc pl-5 my-3">$1</ul>');
 
-    // Links
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, 
       '<a href="$2" class="text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer">$1</a>');
 
-    // Line breaks
     processed = processed.replace(/\n/g, '<br>');
 
     console.log('✅ Content processing complete:', {
@@ -182,32 +185,35 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   };
   
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-3 w-full`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-3 w-full animate-fade-in`}>
       {!isUser && (
         <img 
           src="/lovable-uploads/63083a92-c115-4af0-86c6-164b93752c8c.png" 
           alt="Sorachio" 
-          className="w-8 h-8 rounded-full flex-shrink-0"
+          className="w-8 h-8 rounded-full flex-shrink-0 ring-2 ring-blue-100"
         />
       )}
       
       <div className={`
-        px-4 py-3 rounded-lg relative
+        px-4 py-3 rounded-lg relative transition-all duration-200 hover:shadow-md
         ${isUser 
-          ? 'bg-gray-500 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]'
+          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-sm max-w-[85%] sm:max-w-[75%] lg:max-w-[60%]' 
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-sm max-w-[90%] sm:max-w-[85%] lg:max-w-[75%] border border-gray-200 dark:border-gray-700'
         }
       `}>
         {message.image && (
           <img 
             src={message.image} 
             alt="Uploaded image" 
-            className="max-w-full rounded-lg mb-2"
+            className="max-w-full rounded-lg mb-2 shadow-sm"
           />
         )}
         
         {isUser ? (
-          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+          <div>
+            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+            <MessageStatus status={messageStatus} />
+          </div>
         ) : (
           <div
             ref={contentRef}
@@ -218,7 +224,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       </div>
       
       {isUser && (
-        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-blue-100">
           <User className="w-4 h-4 text-white" />
         </div>
       )}

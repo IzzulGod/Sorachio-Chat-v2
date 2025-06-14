@@ -1,9 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Send } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { AutoResizeTextarea } from '@/components/AutoResizeTextarea';
+import { VoiceRecording } from '@/components/VoiceRecording';
 
 interface ChatInputProps {
   onSendMessage: (content: string, image?: File) => void;
@@ -16,7 +18,6 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [recordingProgress, setRecordingProgress] = useState(0);
   const [showRecordingFeedback, setShowRecordingFeedback] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { isListening, startListening, stopListening, transcript } = useSpeechRecognition();
@@ -54,6 +55,13 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
     e.preventDefault();
     if (!message.trim() && !selectedImage) return;
     
+    // Add sending animation
+    const messageContainer = document.querySelector('.chat-messages');
+    if (messageContainer) {
+      messageContainer.classList.add('animate-pulse');
+      setTimeout(() => messageContainer.classList.remove('animate-pulse'), 300);
+    }
+    
     onSendMessage(message.trim(), selectedImage || undefined);
     setMessage('');
     setSelectedImage(null);
@@ -90,60 +98,70 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
 
   return (
     <div className="border-t border-border bg-background p-4">
-      {/* Recording Feedback */}
+      {/* Enhanced Recording Feedback */}
       {isListening && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-red-700">Recording voice...</span>
+        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg animate-fade-in">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+                <div className="absolute inset-0 w-4 h-4 bg-red-500 rounded-full animate-ping opacity-30"></div>
+              </div>
+              <span className="text-sm font-medium text-red-700">🎤 Recording voice...</span>
+            </div>
+            <div className="flex space-x-1">
+              <div className="w-1 h-4 bg-red-400 rounded-full animate-pulse"></div>
+              <div className="w-1 h-6 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-1 h-3 bg-red-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-1 h-5 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+            </div>
           </div>
-          <Progress value={recordingProgress} className="h-2" />
-          <p className="text-xs text-red-600 mt-1">Speak clearly, press again to stop</p>
+          <Progress value={recordingProgress} className="h-2 mb-2" />
+          <p className="text-xs text-red-600">💡 Speak clearly, tap mic again to stop</p>
         </div>
       )}
 
-      {/* Success Feedback */}
+      {/* Enhanced Success Feedback */}
       {showRecordingFeedback && transcript && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in">
-          <div className="flex items-center space-x-2">
-            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="text-sm font-medium text-green-700">Voice recorded successfully!</span>
+        <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg animate-fade-in">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-sm font-medium text-green-700">✨ Voice captured successfully!</span>
           </div>
-          <p className="text-xs text-green-600 mt-1">"{transcript.substring(0, 50)}..."</p>
+          <p className="text-xs text-green-600 bg-green-100 p-2 rounded italic">"{transcript.substring(0, 80)}..."</p>
         </div>
       )}
 
-      {/* Image Preview */}
+      {/* Enhanced Image Preview */}
       {imagePreview && (
-        <div className="relative mb-4">
-          <img src={imagePreview} alt="Image Preview" className="rounded-lg max-h-64 w-full object-contain" />
+        <div className="relative mb-4 animate-scale-in">
+          <img src={imagePreview} alt="Preview" className="rounded-lg max-h-64 w-full object-contain shadow-lg" />
           <Button
             type="button"
             onClick={removeImage}
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 bg-background/80 hover:bg-background text-foreground hover:text-destructive rounded-full shadow-md"
+            className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg backdrop-blur-sm"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
-            <span className="sr-only">Remove image</span>
           </Button>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-end space-x-3">
           <div className="flex-1 relative">
-            <Textarea
-              ref={textareaRef}
+            <AutoResizeTextarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message here..."
-              className="min-h-[60px] max-h-[200px] resize-none pr-12"
+              placeholder="Ketik pesan kamu di sini... ✨"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -152,42 +170,20 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               }}
             />
             
-            {/* Voice recording button inside textarea */}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={toggleVoiceRecording}
-              className={`absolute right-2 bottom-2 p-2 rounded-md transition-all duration-200 ${
-                isListening 
-                  ? 'bg-red-100 hover:bg-red-200 text-red-600 animate-pulse' 
-                  : 'hover:bg-accent text-foreground hover:scale-105'
-              }`}
-            >
-              <svg 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                className={`transition-all duration-200 ${isListening ? 'text-red-600 scale-110' : 'text-foreground'}`}
-              >
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="23"/>
-                <line x1="8" y1="23" x2="16" y2="23"/>
-              </svg>
-            </Button>
+            <VoiceRecording 
+              isListening={isListening}
+              onToggleRecording={toggleVoiceRecording}
+            />
           </div>
           
-          {/* Image upload button */}
+          {/* Enhanced Image Upload Button */}
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={() => fileInputRef.current?.click()}
-            className="shrink-0"
+            className="shrink-0 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 hover:scale-105"
+            title="Upload gambar"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
@@ -196,12 +192,12 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             </svg>
           </Button>
           
-          {/* Send button */}
+          {/* Enhanced Send Button */}
           <Button
             type="submit"
             disabled={isLoading || (!message.trim() && !selectedImage)}
             size="icon"
-            className="shrink-0"
+            className="shrink-0 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-200 hover:scale-105 shadow-lg"
           >
             {isLoading ? (
               <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

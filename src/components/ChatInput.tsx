@@ -176,13 +176,13 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             />
           </div>
           
-          {/* Enhanced Image Upload Button */}
+          {/* Image Upload Button - aligned to center */}
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 hover:scale-105"
+            className="shrink-0 self-center"
             title="Upload gambar"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -192,12 +192,12 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             </svg>
           </Button>
           
-          {/* Enhanced Send Button */}
+          {/* Send Button - default styling, aligned to center */}
           <Button
             type="submit"
             disabled={isLoading || (!message.trim() && !selectedImage)}
             size="icon"
-            className="shrink-0 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-200 hover:scale-105 shadow-lg"
+            className="shrink-0 self-center"
           >
             {isLoading ? (
               <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
